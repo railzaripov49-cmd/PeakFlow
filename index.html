@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 35 - TRUE iOS) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 37 - NO GHOST CLICKS) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -81,13 +81,12 @@
             position: relative; z-index: 1; align-content: start; 
         }
 
-        /* Ячейки (как иконки в iOS) */
+        /* Ячейки */
         .day-cell { 
             width: 100%; aspect-ratio: 1 / 1; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             border-radius: 18px; position: relative; cursor: pointer;
             
-            /* Нативный стиль ячейки */
             background: var(--ios-card);
             border: 1px solid rgba(255,255,255,0.05);
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -109,7 +108,7 @@
         .empty-cell:active { transform: none; background: transparent; }
 
         /* =========================================
-           FAB МЕНЮ (iOS Context Menu)
+           FAB МЕНЮ
            ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
@@ -146,8 +145,9 @@
 
         .fab-action-btn {
             background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 12px; color: white;
-            display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500;
+            display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 15px; font-weight: 500;
             cursor: pointer; transition: background 0.2s, transform 0.1s;
+            width: 100%;
         }
         .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
 
@@ -161,7 +161,7 @@
         }
 
         /* =========================================
-           УВЕДОМЛЕНИЕ (iOS Toast)
+           УВЕДОМЛЕНИЕ
            ========================================= */
         #toast {
             position: fixed; top: 15%; left: 50%; transform: translateX(-50%) translateY(-20px) scale(0.9);
@@ -174,14 +174,13 @@
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
         /* =========================================
-           МОДАЛЬНОЕ ОКНО (iOS Bottom Sheet / Modal)
+           МОДАЛЬНОЕ ОКНО
            ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
             z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.3s; 
         }
         
-        /* Затемнение фона (без сильного блюра, как в iOS) */
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0, 0, 0, 0.5); 
@@ -191,7 +190,6 @@
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
             
-            /* Нативное стекло */
             background: var(--ios-glass);
             backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
             border-radius: 24px; 
@@ -209,7 +207,6 @@
         #expandedView.active { pointer-events: auto; opacity: 1; }
         #expandedView.active::before { opacity: 1; }
         
-        /* ШАПКА МОДАЛКИ */
         #modalInner { 
             display: flex; flex-direction: column; height: 100%; min-height: 0;
             opacity: 0; transition: opacity 0.3s ease; 
@@ -225,13 +222,11 @@
         }
         .close-btn:active { background: rgba(255,255,255,0.3); }
 
-        /* Контейнер для переключения списка и графика */
         #innerViewsWrapper { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 16px; }
         
-        /* СПИСОК ЗАМЕРОВ (iOS List) */
         #listView { 
             position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; 
-            transition: opacity 0.3s, filter 0.3s;
+            transition: opacity 0.3s;
         }
         #measurementList { 
             flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; 
@@ -239,7 +234,6 @@
         }
         #measurementList::-webkit-scrollbar { display: none; }
         
-        /* Строка замера */
         .measurement-item { 
             background: rgba(255,255,255,0.08); 
             border: 1px solid rgba(255,255,255,0.05);
@@ -247,27 +241,23 @@
             cursor: pointer; flex-shrink: 0; transition: background 0.2s, transform 0.1s;
         }
         
-        .measurement-item:active { 
-            background: rgba(255,255,255,0.15); 
-            transform: scale(0.98);
-        }
+        .measurement-item:active { background: rgba(255,255,255,0.15); transform: scale(0.98); }
 
         .m-time { color: var(--ios-text-secondary); font-size: 15px; font-weight: 500; }
         .m-value { color: var(--ios-red); font-size: 17px; font-weight: 600; }
 
-        /* ДЕТАЛЬНЫЙ ГРАФИК (Внутри модалки) */
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
             
-            background: var(--ios-card); /* Непрозрачный фон для графика */
+            background: var(--ios-card); /* Непрозрачный фон */
             border-radius: 16px;
             padding: 15px; box-sizing: border-box;
             border: 1px solid rgba(255,255,255,0.1);
             
             clip-path: inset(50% 50% 50% 50% round 16px); 
-            will-change: clip-path, opacity, filter;
+            will-change: clip-path, opacity;
             transform: translateZ(0);
-            transition: clip-path 0.6s var(--ios-spring), opacity 0.3s, filter 0.3s;
+            transition: clip-path 0.5s var(--ios-spring), opacity 0.2s;
         }
         
         .back-btn {
@@ -309,6 +299,7 @@
         </div>
     </div>
 
+    <!-- Изменен onclick на кнопке-контейнере для контроля кликов -->
     <div id="fabContainer" onclick="toggleFab(event)">
         <div class="fab-plus">+</div>
         <div class="fab-menu-content">
@@ -359,6 +350,7 @@
         let currentView = 'calendar';
         let monthlyChartInstance = null;
         let breathChartInstance = null; 
+        let isAnimating = false; // Защита от двойных кликов
 
         function vibrate(type) {
             if (tg.HapticFeedback) {
@@ -368,9 +360,11 @@
         }
 
         function toggleFab(e) {
+            // Проверяем, что клик пришелся на контейнер или плюсик
             if (e.target.id === 'fabContainer' || e.target.classList.contains('fab-plus')) {
                 vibrate('light');
                 const fab = document.getElementById('fabContainer');
+                if (fab.style.pointerEvents === 'none') return;
                 fab.classList.toggle('expanded');
             }
         }
@@ -384,16 +378,23 @@
 
         function switchToView(targetView, e) {
             if(e) e.stopPropagation(); 
+            
+            // Защита от спама кликов
+            if (isAnimating) return;
+            
             vibrate('medium');
             
             const fab = document.getElementById('fabContainer');
+            fab.style.pointerEvents = 'none'; // Блокируем кнопку во время анимации
             fab.classList.remove('expanded');
 
             if (currentView === targetView) {
                 showToast("Вы уже находитесь здесь");
+                fab.style.pointerEvents = 'auto';
                 return;
             }
 
+            isAnimating = true;
             const incomingView = targetView === 'graph' ? document.getElementById('graphView') : document.getElementById('calendarView');
             const outgoingView = targetView === 'graph' ? document.getElementById('calendarView') : document.getElementById('graphView');
 
@@ -401,6 +402,8 @@
 
             incomingView.style.zIndex = '20';
             outgoingView.style.zIndex = '10';
+            incomingView.style.pointerEvents = 'auto'; // Блокируем клики сквозь анимацию
+            outgoingView.style.pointerEvents = 'none';
 
             incomingView.style.opacity = '1';
             incomingView.style.transition = 'none';
@@ -424,6 +427,10 @@
                 outgoingView.classList.remove('active');
                 incomingView.style.zIndex = '10';
                 incomingView.style.transition = '';
+                incomingView.style.pointerEvents = ''; 
+                outgoingView.style.pointerEvents = ''; 
+                fab.style.pointerEvents = 'auto'; // Разблокируем кнопку
+                isAnimating = false;
             }, 650); 
         }
 
@@ -656,7 +663,6 @@
             }, 650);
         }
 
-        // --- ВОЗВРАТ К СПИСКУ (С БЛЮРОМ) ---
         function showListView(instant = false) {
             const list = document.getElementById('listView');
             const graph = document.getElementById('graphContainer');
@@ -665,10 +671,8 @@
             list.style.display = 'flex';
             if (!instant) {
                 list.style.opacity = '0';
-                list.style.filter = 'blur(10px)';
             } else {
                 list.style.opacity = '1';
-                list.style.filter = 'blur(0px)';
             }
             
             if (instant || !lastClickedItem) {
@@ -687,26 +691,21 @@
             const insetLeft = itemRect.left - wrapperRect.left;
             const insetRight = wrapperRect.right - itemRect.right;
 
-            // График уходит с блюром
-            graph.style.transition = 'clip-path 0.6s var(--ios-spring), opacity 0.3s, filter 0.3s';
+            graph.style.transition = 'clip-path 0.5s var(--ios-spring), opacity 0.2s';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             graph.style.opacity = '0';
-            graph.style.filter = 'blur(10px)';
 
-            // Список проявляется
             setTimeout(() => {
-                list.style.transition = 'opacity 0.3s, filter 0.3s';
+                list.style.transition = 'opacity 0.2s';
                 list.style.opacity = '1';
-                list.style.filter = 'blur(0px)';
             }, 100);
 
             setTimeout(() => {
                 graph.style.display = 'none';
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
-            }, 650); 
+            }, 550); 
         }
 
-        // --- ОТКРЫТИЕ ГРАФИКА (С БЛЮРОМ) ---
         function showGraph(measurement, itemElement) {
             lastClickedItem = itemElement;
             
@@ -714,14 +713,12 @@
             const list = document.getElementById('listView');
             const wrapper = document.getElementById('innerViewsWrapper');
             
-            list.style.transition = 'opacity 0.3s, filter 0.3s';
+            list.style.transition = 'opacity 0.2s';
             list.style.opacity = '0';
-            list.style.filter = 'blur(10px)';
             list.style.pointerEvents = 'none';
             
             graph.style.display = 'flex';
-            graph.style.opacity = '0';
-            graph.style.filter = 'blur(10px)';
+            graph.style.opacity = '0'; 
             
             const itemRect = itemElement.getBoundingClientRect();
             const wrapperRect = wrapper.getBoundingClientRect();
@@ -788,15 +785,14 @@
             graph.offsetHeight; 
             
             setTimeout(() => {
-                graph.style.transition = 'clip-path 0.6s var(--ios-spring), opacity 0.3s, filter 0.3s';
+                graph.style.transition = 'clip-path 0.5s var(--ios-spring), opacity 0.2s';
                 graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
                 graph.style.opacity = '1';
-                graph.style.filter = 'blur(0px)';
             }, 10);
 
             setTimeout(() => {
                 list.style.display = 'none';
-            }, 600);
+            }, 500);
         }
 
         document.getElementById('prevBtn').addEventListener('click', () => {
@@ -816,4 +812,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 35 - TRUE iOS) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 37 - NO GHOST CLICKS) =================== -->
