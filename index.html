@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 32 - OVERLAP TRANSITION) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 33 - SOLID & SMOOTH) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -31,7 +31,7 @@
             z-index: 1;
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
-            transition: clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         .view.active {
@@ -196,7 +196,7 @@
         #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
         /* ==========================================
-           МОДАЛЬНОЕ ОКНО (В СТИЛЕ LIQUID GLASS)
+           МОДАЛЬНОЕ ОКНО (БЕЗ РАЗМЫТИЯ ФОНА)
            ========================================== */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
@@ -204,17 +204,17 @@
             transition: opacity 0.4s; 
         }
         
+        /* Убрали backdrop-filter, оставили только легкое затемнение */
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: transparent; 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+            background: rgba(0, 0, 0, 0.4); 
             opacity: 0; transition: opacity 0.4s; 
         }
         
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
             
-            background: linear-gradient(135deg, rgba(40, 40, 40, 0.7) 0%, rgba(20, 20, 20, 0.5) 100%);
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.8) 100%);
             border-radius: 24px; 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             border-top: 1px solid rgba(255, 255, 255, 0.4);
@@ -225,6 +225,7 @@
             clip-path: inset(50% 50% 50% 50% round 16px); 
             will-change: clip-path;
             transform: translateZ(0); 
+            transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         #expandedView.active { pointer-events: auto; opacity: 1; }
@@ -284,7 +285,8 @@
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
             
-            background: rgba(20, 20, 20, 0.95);
+            /* АБСОЛЮТНО НЕПРОЗРАЧНЫЙ ФОН, ЧТОБЫ НЕ БЫЛО ПРОСВЕЧИВАНИЯ */
+            background-color: #121212 !important;
             border-radius: 16px;
             padding: 10px;
             box-sizing: border-box;
@@ -294,6 +296,7 @@
             clip-path: inset(50% 50% 50% 50% round 16px); 
             will-change: clip-path;
             transform: translateZ(0);
+            transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .back-btn {
             background: rgba(255,255,255,0.1); border: none; color: #4da6ff;
@@ -416,7 +419,6 @@
             }
         });
 
-        // --- ПЕРЕХОД МЕЖДУ КАЛЕНДАРЕМ И ГРАФИКОМ (ПЕРЕКРЫТИЕ) ---
         function switchToView(targetView, e) {
             if(e) e.stopPropagation(); 
             vibrate('medium');
@@ -434,7 +436,6 @@
 
             const rect = fab.getBoundingClientRect();
 
-            // Поднимаем новый экран ПОВЕРХ старого
             incomingView.style.zIndex = '20';
             outgoingView.style.zIndex = '10';
 
@@ -442,28 +443,25 @@
             incomingView.style.transition = 'none';
             incomingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
             
-            // НЕ анимируем старый экран, он просто останется на месте
             outgoingView.style.transition = 'none';
             outgoingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
 
-            incomingView.offsetHeight; // Force reflow
+            incomingView.offsetHeight; 
 
-            // Запускаем расширение ТОЛЬКО нового экрана
             setTimeout(() => {
-                incomingView.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                incomingView.style.transition = 'clip-path 1s cubic-bezier(0.16, 1, 0.3, 1)';
                 incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
             }, 50);
 
             currentView = targetView;
             if (targetView === 'graph') renderMonthlyGraph();
 
-            // Очистка после завершения анимации
             setTimeout(() => {
                 incomingView.classList.add('active');
                 outgoingView.classList.remove('active');
                 incomingView.style.zIndex = '10';
                 incomingView.style.transition = '';
-            }, 850); 
+            }, 1050); 
         }
 
         function showToast(msg) {
@@ -658,14 +656,14 @@
             modal.offsetHeight; 
             
             setTimeout(() => {
-                modal.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                modal.style.transition = 'clip-path 1s cubic-bezier(0.16, 1, 0.3, 1)';
                 modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
             }, 50);
 
             setTimeout(() => {
                 inner.style.transition = 'opacity 0.3s';
                 inner.style.opacity = '1';
-            }, 800);
+            }, 1000);
         }
 
         function closeExpandedView() {
@@ -686,7 +684,7 @@
                 const insetLeft = rect.left - modalRect.left;
                 const insetRight = modalRect.right - rect.right;
                 
-                modal.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                modal.style.transition = 'clip-path 1s cubic-bezier(0.16, 1, 0.3, 1)';
                 modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             } else {
                 modal.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
@@ -696,7 +694,7 @@
             
             setTimeout(() => { 
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } 
-            }, 850);
+            }, 1050);
         }
 
         function showListView(instant = false) {
@@ -722,13 +720,13 @@
             const insetLeft = itemRect.left - wrapperRect.left;
             const insetRight = wrapperRect.right - itemRect.right;
 
-            graph.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            graph.style.transition = 'clip-path 1s cubic-bezier(0.16, 1, 0.3, 1)';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
 
             setTimeout(() => {
                 graph.style.display = 'none';
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
-            }, 850); 
+            }, 1050); 
         }
 
         function showGraph(measurement, itemElement) {
@@ -738,6 +736,7 @@
             const list = document.getElementById('listView');
             const wrapper = document.getElementById('innerViewsWrapper');
             
+            // Мгновенно скрываем список, чтобы он не просвечивал
             list.style.display = 'none';
             graph.style.display = 'flex';
             
@@ -805,7 +804,7 @@
 
             graph.offsetHeight; 
             setTimeout(() => {
-                graph.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                graph.style.transition = 'clip-path 1s cubic-bezier(0.16, 1, 0.3, 1)';
                 graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
             }, 50);
         }
@@ -827,4 +826,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 32 - OVERLAP TRANSITION) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 33 - SOLID & SMOOTH) =================== -->
