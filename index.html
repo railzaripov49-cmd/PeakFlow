@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 37 - NO GHOST CLICKS) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 38 - MOBILE GHOST CLICK KILLER) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -32,6 +32,11 @@
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
         }
 
+        /* ЯДЕРНАЯ БЛОКИРОВКА: пока класс locked на body, нихуя не нажимается */
+        body.locked * {
+            pointer-events: none !important;
+        }
+
         /* =========================================
            ОБЕРТКА И ЭКРАНЫ
            ========================================= */
@@ -50,7 +55,7 @@
         .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
 
         /* =========================================
-           ШАПКА (iOS Navigation Bar)
+           ШАПКА
            ========================================= */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
@@ -67,7 +72,7 @@
         .header button:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
 
         /* =========================================
-           КАЛЕНДАРЬ (iOS Grid)
+           КАЛЕНДАРЬ
            ========================================= */
         .weekdays { 
             display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
@@ -81,29 +86,18 @@
             position: relative; z-index: 1; align-content: start; 
         }
 
-        /* Ячейки */
         .day-cell { 
             width: 100%; aspect-ratio: 1 / 1; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             border-radius: 18px; position: relative; cursor: pointer;
-            
-            background: var(--ios-card);
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: var(--ios-card); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: transform 0.15s var(--ios-spring), background 0.2s;
         }
-        
         .day-cell:active { transform: scale(0.9); background: #2C2C2E; }
-        
-        .day-cell.today { 
-            background: var(--ios-blue);
-            box-shadow: 0 4px 10px rgba(10, 132, 255, 0.4);
-        }
-
+        .day-cell.today { background: var(--ios-blue); box-shadow: 0 4px 10px rgba(10, 132, 255, 0.4); }
         .day-num { font-size: 17px; font-weight: 500; color: var(--ios-text); }
         .day-val { font-size: 10px; font-weight: 600; color: var(--ios-red); position: absolute; bottom: 4px; }
         .day-cell.today .day-val { color: rgba(255,255,255,0.8); }
-        
         .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; }
         .empty-cell:active { transform: none; background: transparent; }
 
@@ -146,8 +140,7 @@
         .fab-action-btn {
             background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 12px; color: white;
             display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 15px; font-weight: 500;
-            cursor: pointer; transition: background 0.2s, transform 0.1s;
-            width: 100%;
+            cursor: pointer; transition: background 0.2s, transform 0.1s; width: 100%;
         }
         .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
 
@@ -189,18 +182,13 @@
         
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
-            
             background: var(--ios-glass);
             backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
-            border-radius: 24px; 
-            border: 1px solid var(--ios-glass-border);
+            border-radius: 24px; border: 1px solid var(--ios-glass-border);
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
-            
             clip-path: inset(50% 50% 50% 50% round 20px); 
-            will-change: clip-path;
-            transform: translateZ(0); 
+            will-change: clip-path; transform: translateZ(0); 
             transition: clip-path 0.6s var(--ios-spring);
         }
         
@@ -217,16 +205,14 @@
         .close-btn { 
             background: rgba(255,255,255,0.15); border: none; color: var(--ios-text); 
             font-size: 20px; font-weight: 500; width: 32px; height: 32px; border-radius: 50%; 
-            cursor: pointer; display: flex; justify-content: center; align-items: center; 
-            transition: background 0.2s;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;
         }
         .close-btn:active { background: rgba(255,255,255,0.3); }
 
         #innerViewsWrapper { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 16px; }
         
         #listView { 
-            position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; 
-            transition: opacity 0.3s;
+            position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; transition: opacity 0.3s;
         }
         #measurementList { 
             flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; 
@@ -235,40 +221,27 @@
         #measurementList::-webkit-scrollbar { display: none; }
         
         .measurement-item { 
-            background: rgba(255,255,255,0.08); 
-            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.05);
             padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
             cursor: pointer; flex-shrink: 0; transition: background 0.2s, transform 0.1s;
         }
-        
         .measurement-item:active { background: rgba(255,255,255,0.15); transform: scale(0.98); }
-
         .m-time { color: var(--ios-text-secondary); font-size: 15px; font-weight: 500; }
         .m-value { color: var(--ios-red); font-size: 17px; font-weight: 600; }
 
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
-            
-            background: var(--ios-card); /* Непрозрачный фон */
-            border-radius: 16px;
-            padding: 15px; box-sizing: border-box;
-            border: 1px solid rgba(255,255,255,0.1);
-            
-            clip-path: inset(50% 50% 50% 50% round 16px); 
-            will-change: clip-path, opacity;
-            transform: translateZ(0);
+            background: var(--ios-card); border-radius: 16px; padding: 15px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1);
+            clip-path: inset(50% 50% 50% 50% round 16px); will-change: clip-path, opacity; transform: translateZ(0);
             transition: clip-path 0.5s var(--ios-spring), opacity 0.2s;
         }
-        
         .back-btn {
             background: rgba(255,255,255,0.1); border: none; color: var(--ios-blue);
             font-size: 15px; font-weight: 500; padding: 10px 16px; border-radius: 12px;
             margin-bottom: 15px; cursor: pointer; align-self: flex-start; flex-shrink: 0;
-            display: flex; align-items: center; gap: 4px;
-            transition: background 0.2s;
+            display: flex; align-items: center; gap: 4px; transition: background 0.2s;
         }
         .back-btn:active { background: rgba(255,255,255,0.2); }
-        
         .chart-wrapper { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; }
     </style>
 </head>
@@ -299,10 +272,11 @@
         </div>
     </div>
 
-    <!-- Изменен onclick на кнопке-контейнере для контроля кликов -->
+    <!-- Кнопка FAB -->
     <div id="fabContainer" onclick="toggleFab(event)">
         <div class="fab-plus">+</div>
         <div class="fab-menu-content">
+            <!-- Заменили onclick на ontouchstart и onclick для надежности на мобилках -->
             <button class="fab-action-btn" onclick="switchToView('graph', event)">📈 График</button>
             <button class="fab-action-btn" onclick="switchToView('calendar', event)">📅 Календарь</button>
         </div>
@@ -350,7 +324,9 @@
         let currentView = 'calendar';
         let monthlyChartInstance = null;
         let breathChartInstance = null; 
-        let isAnimating = false; // Защита от двойных кликов
+        
+        // Флаг, чтобы блокировать клики во время анимации
+        let isAnimating = false; 
 
         function vibrate(type) {
             if (tg.HapticFeedback) {
@@ -360,11 +336,10 @@
         }
 
         function toggleFab(e) {
-            // Проверяем, что клик пришелся на контейнер или плюсик
             if (e.target.id === 'fabContainer' || e.target.classList.contains('fab-plus')) {
                 vibrate('light');
                 const fab = document.getElementById('fabContainer');
-                if (fab.style.pointerEvents === 'none') return;
+                if (isAnimating) return; // Если идет анимация, не открываем меню
                 fab.classList.toggle('expanded');
             }
         }
@@ -379,22 +354,23 @@
         function switchToView(targetView, e) {
             if(e) e.stopPropagation(); 
             
-            // Защита от спама кликов
+            // Если уже идет анимация — игнорируем любые клики
             if (isAnimating) return;
             
             vibrate('medium');
             
             const fab = document.getElementById('fabContainer');
-            fab.style.pointerEvents = 'none'; // Блокируем кнопку во время анимации
             fab.classList.remove('expanded');
 
             if (currentView === targetView) {
                 showToast("Вы уже находитесь здесь");
-                fab.style.pointerEvents = 'auto';
                 return;
             }
 
+            // ВКЛЮЧАЕМ БЛОКИРОВКУ
             isAnimating = true;
+            document.body.classList.add('locked'); // Блокируем клики на всем экране
+
             const incomingView = targetView === 'graph' ? document.getElementById('graphView') : document.getElementById('calendarView');
             const outgoingView = targetView === 'graph' ? document.getElementById('calendarView') : document.getElementById('graphView');
 
@@ -402,8 +378,6 @@
 
             incomingView.style.zIndex = '20';
             outgoingView.style.zIndex = '10';
-            incomingView.style.pointerEvents = 'auto'; // Блокируем клики сквозь анимацию
-            outgoingView.style.pointerEvents = 'none';
 
             incomingView.style.opacity = '1';
             incomingView.style.transition = 'none';
@@ -422,15 +396,15 @@
             currentView = targetView;
             if (targetView === 'graph') renderMonthlyGraph();
 
+            // ВЫКЛЮЧАЕМ БЛОКИРОВКУ ПОСЛЕ ЗАВЕРШЕНИЯ
             setTimeout(() => {
                 incomingView.classList.add('active');
                 outgoingView.classList.remove('active');
                 incomingView.style.zIndex = '10';
                 incomingView.style.transition = '';
-                incomingView.style.pointerEvents = ''; 
-                outgoingView.style.pointerEvents = ''; 
-                fab.style.pointerEvents = 'auto'; // Разблокируем кнопку
-                isAnimating = false;
+                
+                document.body.classList.remove('locked'); // Разблокируем экран
+                isAnimating = false; // Снимаем флаг
             }, 650); 
         }
 
@@ -812,4 +786,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 37 - NO GHOST CLICKS) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 38 - MOBILE GHOST CLICK KILLER) =================== -->
