@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 23 - TRUE FROSTED GLASS) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 24 - PERFECT MATH) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -191,13 +191,13 @@
         
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
-            /* ПОЛУПРОЗРАЧНЫЙ ФОН С РАЗМЫТИЕМ (Frosted Glass) */
             background: rgba(30, 30, 30, 0.65);
             backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
             border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.3);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             
+            /* Начальный clip-path будет задан через JS */
             clip-path: inset(50% 50% 50% 50% round 16px); 
             transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
         }
@@ -211,7 +211,7 @@
         .close-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
 
         /* Контейнер для переключения списка и графика */
-        #innerViewsWrapper { position: relative; flex: 1; min-height: 0; }
+        #innerViewsWrapper { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 16px; }
         
         /* СПИСОК ЗАМЕРОВ */
         #listView { 
@@ -235,12 +235,11 @@
         .m-time { color: #aaa; font-size: 14px; }
         .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; }
 
-        /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА (ТОЖЕ СТЕКЛО) */
+        /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА */
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
             
-            /* ПОЛУПРОЗРАЧНЫЙ ФОН С РАЗМЫТИЕМ */
-            background: rgba(20, 20, 20, 0.75) !important;
+            background: rgba(20, 20, 20, 0.85) !important;
             backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%);
             
             border-radius: 16px;
@@ -555,6 +554,7 @@
             });
         }
 
+        // --- ОТКРЫТИЕ МОДАЛКИ (Правильный сброс анимации) ---
         function openExpandedView(cell, day, measurements) {
             vibrate('medium');
             lastActiveCell = cell;
@@ -563,14 +563,19 @@
             const modal = document.getElementById('modalContent');
             const view = document.getElementById('expandedView');
             
-            const modalTop = window.innerHeight * 0.1;
-            const insetTop = rect.top - modalTop;
-            const insetBottom = (window.innerHeight * 0.9) - rect.bottom;
-            const insetLeft = rect.left - 20; 
-            const insetRight = (window.innerWidth - 20) - rect.right;
+            const modalRect = modal.getBoundingClientRect();
             
+            // Считаем отступы относительно самой модалки
+            const insetTop = rect.top - modalRect.top;
+            const insetBottom = modalRect.bottom - rect.bottom;
+            const insetLeft = rect.left - modalRect.left;
+            const insetRight = modalRect.right - rect.right;
+            
+            // 1. Мгновенно ставим окно в координаты ячейки (отключаем анимацию)
+            modal.style.transition = 'none';
             modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             
+            // Заполняем данными
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
             
@@ -595,56 +600,65 @@
 
             showListView(true); 
 
-            setTimeout(() => {
-                modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
-                view.classList.add('active');
-            }, 10);
+            // 2. Форсируем перерисовку кадра
+            void modal.offsetWidth;
+
+            // 3. Включаем анимацию и расширяем на весь экран
+            modal.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+            modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
+            
+            view.classList.add('active');
         }
 
         function closeExpandedView() {
             vibrate('light');
             const view = document.getElementById('expandedView');
             const modal = document.getElementById('modalContent');
-            view.classList.remove('active');
             
             if (lastActiveCell) {
                 const rect = lastActiveCell.getBoundingClientRect();
-                const modalTop = window.innerHeight * 0.1;
-                const insetTop = rect.top - modalTop;
-                const insetBottom = (window.innerHeight * 0.9) - rect.bottom;
-                const insetLeft = rect.left - 20;
-                const insetRight = (window.innerWidth - 20) - rect.right;
+                const modalRect = modal.getBoundingClientRect();
+                
+                const insetTop = rect.top - modalRect.top;
+                const insetBottom = modalRect.bottom - rect.bottom;
+                const insetLeft = rect.left - modalRect.left;
+                const insetRight = modalRect.right - rect.right;
+                
                 modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             } else {
                 modal.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
             }
-            setTimeout(() => { if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } }, 650);
+            
+            view.classList.remove('active');
+            
+            setTimeout(() => { 
+                if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } 
+            }, 650);
         }
 
-        // --- ВОЗВРАТ К СПИСКУ (Плавно) ---
+        // --- ВОЗВРАТ К СПИСКУ ---
         function showListView(instant = false) {
             const list = document.getElementById('listView');
             const graph = document.getElementById('graphContainer');
-            const modal = document.getElementById('modalContent');
             
-            // Мгновенно показываем прозрачность списка
             list.style.opacity = '1';
             list.style.zIndex = '10';
             
             if (instant || !lastClickedItem) {
+                graph.style.transition = 'none';
                 graph.style.display = 'none';
                 graph.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
                 return;
             }
 
-            const rect = lastClickedItem.getBoundingClientRect();
-            const parentRect = modal.getBoundingClientRect();
+            const itemRect = lastClickedItem.getBoundingClientRect();
+            const graphRect = graph.getBoundingClientRect();
 
-            const insetTop = rect.top - parentRect.top - 20; 
-            const insetBottom = parentRect.bottom - rect.bottom - 20;
-            const insetLeft = rect.left - parentRect.left - 20;
-            const insetRight = parentRect.right - rect.right - 20;
+            const insetTop = itemRect.top - graphRect.top;
+            const insetBottom = graphRect.bottom - itemRect.bottom;
+            const insetLeft = itemRect.left - graphRect.left;
+            const insetRight = graphRect.right - itemRect.right;
 
             graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
@@ -655,38 +669,41 @@
             }, 650); 
         }
 
-        // --- ОТКРЫТИЕ ГРАФИКА (Скрываем список, чтобы не просвечивал) ---
+        // --- ОТКРЫТИЕ ГРАФИКА ---
         function showGraph(measurement, itemElement) {
             lastClickedItem = itemElement;
             
             const graph = document.getElementById('graphContainer');
             const list = document.getElementById('listView');
-            const modal = document.getElementById('modalContent');
             
-            const rect = itemElement.getBoundingClientRect();
-            const parentRect = modal.getBoundingClientRect();
-
-            const insetTop = rect.top - parentRect.top - 20; 
-            const insetBottom = parentRect.bottom - rect.bottom - 20;
-            const insetLeft = rect.left - parentRect.left - 20;
-            const insetRight = parentRect.right - rect.right - 20;
-
-            // МГНОВЕННО СКРЫВАЕМ СПИСОК (убирает наслоение текста)
+            // Мгновенно убираем список
             list.style.opacity = '0';
             list.style.pointerEvents = 'none';
+            
+            // Берем точные координаты строки внутри графика
+            const itemRect = itemElement.getBoundingClientRect();
+            const graphRect = graph.getBoundingClientRect();
+
+            const insetTop = itemRect.top - graphRect.top;
+            const insetBottom = graphRect.bottom - itemRect.bottom;
+            const insetLeft = itemRect.left - graphRect.left;
+            const insetRight = graphRect.right - itemRect.right;
 
             graph.style.display = 'flex';
             graph.style.zIndex = '999';
             
+            // 1. Мгновенно ставим в размер строки
             graph.style.transition = 'none';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             
+            document.getElementById('graphTitle').innerText = `Замер в ${measurement.time}`;
+            
+            // 2. Форсируем перерисовку
             void graph.offsetWidth;
 
+            // 3. Запускаем анимацию расширения
             graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
-
-            document.getElementById('graphTitle').innerText = `Замер в ${measurement.time}`;
 
             const ctx = document.getElementById('breathChart').getContext('2d');
             let labels = [];
@@ -755,4 +772,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 23 - TRUE FROSTED GLASS) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 24 - PERFECT MATH) =================== -->
