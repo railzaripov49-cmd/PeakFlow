@@ -1,0 +1,745 @@
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 18 - UNIVERSAL MORPHING) ================= -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    
+    <style>
+        /* ГЛОБАЛЬНЫЕ СТИЛИ */
+        body { 
+            background-color: #050505; color: #ffffff; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; padding: 0; overflow: hidden; height: 100vh; box-sizing: border-box;
+            -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* ОБЕРТКА ДЛЯ ЭКРАНОВ */
+        #appWrapper { position: relative; width: 100%; height: 100%; overflow: hidden; background-color: #050505; }
+        
+        /* ЭКРАНЫ (КАЛЕНДАРЬ И ГРАФИК) */
+        .view { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column;
+            padding: 20px; box-sizing: border-box;
+            background-color: #050505;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .view.active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* СФЕРЫ НА ФОНЕ */
+        .bg-orb { position: absolute; border-radius: 50%; filter: blur(50px); z-index: 0; opacity: 0.6; pointer-events: none; }
+        .orb-1 { width: 250px; height: 250px; background: #4da6ff; top: 20%; left: 20%; animation: orbit1 15s infinite linear; }
+        .orb-2 { width: 200px; height: 200px; background: #0055ff; top: 50%; left: 50%; animation: orbit2 20s infinite linear reverse; }
+        @keyframes orbit1 {
+            0% { transform: translate(0, 0) scale(1); } 25% { transform: translate(150px, 100px) scale(1.4); }
+            50% { transform: translate(300px, 0) scale(0.8); } 75% { transform: translate(150px, -100px) scale(1.3); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes orbit2 {
+            0% { transform: translate(0, 0) scale(1.2); } 25% { transform: translate(-150px, -100px) scale(0.8); }
+            50% { transform: translate(-250px, 50px) scale(1.5); } 75% { transform: translate(-100px, 150px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1.2); }
+        }
+
+        /* ШАПКА */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 20px; font-size: 26px; font-weight: 600;
+            position: relative; z-index: 1;
+            flex-shrink: 0;
+        }
+        .header button { 
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+            color: #fff; font-size: 20px; padding: 5px 15px; border-radius: 12px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.4); transition: transform 0.1s;
+        }
+        .header button:active { transform: scale(0.9); }
+
+        /* ДНИ НЕДЕЛИ И СЕТКА */
+        .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 600; margin-bottom: 10px; color: #888; font-size: 13px; position: relative; z-index: 1; flex-shrink: 0; }
+        .weekends { color: #ff4d4d; }
+        
+        .calendar { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 8px; 
+            position: relative; 
+            z-index: 1; 
+            align-content: start; 
+        }
+
+        /* ЯЧЕЙКИ (LIQUID GLASS) */
+        .day-cell { 
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 16px;
+            position: relative; cursor: pointer;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.5); border-left: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.5);
+            overflow: hidden; transition: transform 0.1s, box-shadow 0.3s;
+        }
+        .day-cell.has-data {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.5), 0 0 10px rgba(77, 166, 255, 0.2);
+            border-top: 1px solid rgba(77, 166, 255, 0.6);
+        }
+        .day-cell::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%); pointer-events: none; border-radius: inherit;
+        }
+        .day-cell:active { transform: scale(0.88); background: rgba(77, 166, 255, 0.3); box-shadow: 0 0 20px rgba(77, 166, 255, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.8); }
+        .day-cell.today { background: linear-gradient(135deg, rgba(77, 166, 255, 0.35) 0%, rgba(77, 166, 255, 0.1) 100%); border-top: 1px solid rgba(77, 166, 255, 0.9); box-shadow: 0 4px 15px rgba(77, 166, 255, 0.3), inset 0 1px 2px rgba(255,255,255,0.6); }
+        .day-num { font-size: 18px; font-weight: 600; color: #fff; z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+        .day-val { font-size: 10px; font-weight: bold; color: #ff4d4d; position: absolute; bottom: 6px; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; }
+        .empty-cell::before { display: none; }
+        .empty-cell:active { transform: none; background: transparent; box-shadow: none; }
+
+        /* FAB МЕНЮ */
+        #fabContainer {
+            position: fixed; bottom: 30px; left: 20px;
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.3); border-top: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.5);
+            border-radius: 30px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 0.3s, background 0.3s;
+            z-index: 500;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        #fabContainer.expanded {
+            width: 110px; height: 100px;
+            border-radius: 20px;
+            background: rgba(20, 20, 20, 0.2); 
+            backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: default;
+        }
+
+        .fab-plus {
+            position: absolute;
+            font-size: 28px; font-weight: 300; color: white;
+            transition: opacity 0.2s, transform 0.3s;
+        }
+        #fabContainer.expanded .fab-plus {
+            opacity: 0; transform: rotate(45deg); pointer-events: none;
+        }
+
+        .fab-menu-content {
+            display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 12px; box-sizing: border-box;
+            opacity: 0; pointer-events: none; 
+            transform: translateY(20px) scale(0.9); 
+            transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        #fabContainer.expanded .fab-menu-content {
+            opacity: 1; pointer-events: auto; 
+            transform: translateY(0) scale(1);
+            transition-delay: 0.05s;
+        }
+
+        .fab-action-btn {
+            background: rgba(255,255,255,0.1); border: none; padding: 6px 10px; border-radius: 10px; color: white;
+            display: flex; justify-content: flex-start; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .fab-action-btn:active { background: rgba(255,255,255,0.25); }
+
+        /* ГРАФИК ЗА МЕСЯЦ */
+        .chart-container { 
+            flex: 1; position: relative; width: 100%; height: 100%; 
+            background: rgba(20,20,20,0.4); border-radius: 16px; padding: 10px; 
+            border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; 
+        }
+
+        /* УВЕДОМЛЕНИЕ */
+        #toast {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 15px 25px;
+            color: white; font-size: 16px; font-weight: 500; z-index: 9999;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        /* МОДАЛЬНОЕ ОКНО */
+        #expandedView { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+        #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); opacity: 0; transition: opacity 0.3s; }
+        
+        #modalContent {
+            position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.85) 0%, rgba(20, 20, 20, 0.65) 100%);
+            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.15); border-top: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.3);
+            display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
+            clip-path: inset(50% 50% 50% 50% round 16px); transition: clip-path 0.5s cubic-bezier(0.34, 1.3, 0.64, 1);
+        }
+        
+        #expandedView.active { pointer-events: auto; opacity: 1; }
+        #expandedView.active::before { opacity: 1; }
+        
+        /* ШАПКА МОДАЛКИ (Всегда наверху) */
+        .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; z-index: 100; }
+        .expanded-title { font-size: 22px; font-weight: bold; }
+        .close-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+
+        /* Контейнер для переключения списка и графика */
+        #innerViewsWrapper { position: relative; flex: 1; min-height: 0; }
+        
+        /* СПИСОК ЗАМЕРОВ */
+        #listView { 
+            position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; 
+        }
+        #measurementList { 
+            flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; 
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        }
+        #measurementList::-webkit-scrollbar { display: none; }
+        
+        .measurement-item { 
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%); 
+            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.3); 
+            padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
+            cursor: pointer; flex-shrink: 0; transition: transform 0.1s;
+        }
+        .measurement-item:active { transform: scale(0.96); }
+        .m-time { color: #aaa; font-size: 14px; }
+        .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; }
+
+        /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА */
+        #graphContainer { 
+            position: absolute; inset: 0; display: none; flex-direction: column; z-index: 1;
+            clip-path: inset(50% 50% 50% 50% round 16px); transition: clip-path 0.4s cubic-bezier(0.34, 1.3, 0.64, 1);
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.1); border: none; color: #4da6ff;
+            font-size: 14px; padding: 8px 15px; border-radius: 10px;
+            margin-bottom: 15px; cursor: pointer; align-self: flex-start; flex-shrink: 0;
+        }
+        .chart-wrapper { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; }
+    </style>
+</head>
+<body>
+
+    <div id="appWrapper">
+        <div id="calendarView" class="view active">
+            <div class="bg-orb orb-1"></div>
+            <div class="bg-orb orb-2"></div>
+            <div class="header">
+                <button id="prevBtn">&#8249;</button>
+                <span id="monthTitle"></span>
+                <button id="nextBtn">&#8250;</button>
+            </div>
+            <div class="weekdays">
+                <div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div class="weekends">СБ</div><div class="weekends">ВС</div>
+            </div>
+            <div class="calendar" id="calendarGrid"></div>
+        </div>
+
+        <div id="graphView" class="view">
+            <div class="bg-orb orb-1"></div>
+            <div class="bg-orb orb-2"></div>
+            <div class="header">
+                <button id="prevMonthGraph">&#8249;</button>
+                <span id="monthTitleGraph"></span>
+                <button id="nextMonthGraph">&#8250;</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="fabContainer" onclick="toggleFab(event)">
+        <div class="fab-plus">+</div>
+        <div class="fab-menu-content">
+            <button class="fab-action-btn" onclick="switchToView('graph', event)">📈 График</button>
+            <button class="fab-action-btn" onclick="switchToView('calendar', event)">📅 Календарь</button>
+        </div>
+    </div>
+
+    <div id="toast">Вы уже находитесь здесь</div>
+
+    <!-- МОДАЛЬНОЕ ОКНО -->
+    <div id="expandedView" onclick="closeExpandedView()">
+        <div id="modalContent" onclick="event.stopPropagation()">
+            
+            <div class="expanded-header">
+                <div class="expanded-title" id="sheetDateTitle">Дата</div>
+                <button class="close-btn" onclick="closeExpandedView()">×</button>
+            </div>
+
+            <div id="innerViewsWrapper">
+                <!-- СПИСОК -->
+                <div id="listView">
+                    <div id="measurementList"></div>
+                </div>
+                <!-- ГРАФИК ВЫДОХА -->
+                <div id="graphContainer">
+                    <button class="back-btn" onclick="showListView()">← Назад к списку</button>
+                    <div class="expanded-title" id="graphTitle" style="margin-bottom: 15px; flex-shrink: 0;">График</div>
+                    <div class="chart-wrapper">
+                        <canvas id="breathChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); 
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbxh0Poo3SwCP1-2wyQtV5BfGbxvOTKG012sbCPbNlRe-ay82MaTmHbT1ComA1CXT3Wv_Q/exec";
+
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth(); 
+        let allData = {}; 
+        let lastActiveCell = null; 
+        let lastClickedItem = null; // Запоминаем строку, на которую нажали
+        let currentView = 'calendar';
+        let monthlyChartInstance = null;
+        let breathChartInstance = null; 
+
+        function vibrate(type) {
+            if (tg.HapticFeedback) {
+                if (type === 'light') tg.HapticFeedback.impactOccurred('light');
+                if (type === 'medium') tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        function toggleFab(e) {
+            if (e.target.id === 'fabContainer' || e.target.classList.contains('fab-plus')) {
+                vibrate('light');
+                const fab = document.getElementById('fabContainer');
+                fab.classList.toggle('expanded');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const fab = document.getElementById('fabContainer');
+            if (fab.classList.contains('expanded') && !fab.contains(event.target)) {
+                fab.classList.remove('expanded');
+            }
+        });
+
+        // --- ПЕРЕХОД МЕЖДУ КАЛЕНДАРЕМ И ГРАФИКОМ ---
+        function switchToView(targetView, e) {
+            if(e) e.stopPropagation(); 
+            vibrate('medium');
+            
+            const fab = document.getElementById('fabContainer');
+            fab.classList.remove('expanded');
+
+            if (currentView === targetView) {
+                showToast("Вы уже находитесь здесь");
+                return;
+            }
+
+            const incomingView = targetView === 'graph' ? document.getElementById('graphView') : document.getElementById('calendarView');
+            const outgoingView = targetView === 'graph' ? document.getElementById('calendarView') : document.getElementById('graphView');
+
+            const rect = fab.getBoundingClientRect();
+
+            incomingView.style.zIndex = '10';
+            outgoingView.style.zIndex = '20';
+
+            incomingView.style.opacity = '1';
+            incomingView.style.transition = 'none';
+            incomingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
+            
+            outgoingView.style.transition = 'none';
+            outgoingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
+
+            void incomingView.offsetWidth;
+
+            // Новый экран расширяется
+            incomingView.style.transition = 'clip-path 0.5s cubic-bezier(0.34, 1.2, 0.64, 1)';
+            incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
+            
+            // Старый экран сжимается
+            outgoingView.style.transition = 'clip-path 0.5s cubic-bezier(0.34, 1.2, 0.64, 1)';
+            outgoingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
+
+            currentView = targetView;
+            if (targetView === 'graph') renderMonthlyGraph();
+
+            setTimeout(() => {
+                incomingView.classList.add('active');
+                outgoingView.classList.remove('active');
+                outgoingView.style.zIndex = '1';
+                incomingView.style.zIndex = '10';
+                incomingView.style.transition = '';
+                outgoingView.style.transition = '';
+                outgoingView.style.clipPath = ''; // Сброс
+            }, 500);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2000);
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(scriptUrl + "?action=getData");
+                const data = await response.json(); 
+                for (let i = 1; i < data.length; i++) {
+                    const dateObj = new Date(data[i][0]); 
+                    const flow = parseFloat(data[i][1]); 
+                    const curveString = data[i][2]; 
+                    if (isNaN(flow)) continue; 
+                    
+                    const dateKey = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
+                    const timeStr = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0') + ':' + String(dateObj.getSeconds()).padStart(2, '0');
+                    
+                    if (!allData[dateKey]) allData[dateKey] = [];
+                    allData[dateKey].push({ time: timeStr, flow: flow, curve: curveString });
+                }
+                renderCalendar();
+                if(currentView === 'graph') renderMonthlyGraph();
+            } catch (error) {
+                console.error("Ошибка загрузки", error);
+            }
+        }
+
+        function renderCalendar() {
+            const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+            document.getElementById('monthTitle').innerText = monthNames[currentMonth] + " " + currentYear;
+            document.getElementById('monthTitleGraph').innerText = monthNames[currentMonth] + " " + currentYear;
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = ''; 
+            let firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            let startDay = firstDay === 0 ? 7 : firstDay; 
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            for (let i = 1; i < startDay; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'day-cell empty-cell';
+                grid.appendChild(emptyDiv);
+            }
+            
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) cell.classList.add('today');
+                
+                const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+                const measurements = allData[dateKey] || [];
+                
+                if (measurements.length > 0) {
+                    cell.classList.add('has-data');
+                    const maxFlow = Math.max(...measurements.map(m => m.flow));
+                    cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val">${maxFlow.toFixed(1)}</span>`;
+                } else {
+                    cell.innerHTML = `<span class="day-num">${day}</span>`;
+                }
+                
+                cell.addEventListener('click', function() { openExpandedView(this, day, measurements); });
+                grid.appendChild(cell);
+            }
+        }
+
+        function renderMonthlyGraph() {
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            let labels = [];
+            let dataPoints = [];
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                labels.push(day);
+                const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+                const measurements = allData[dateKey];
+                
+                if (measurements && measurements.length > 0) {
+                    const maxFlow = Math.max(...measurements.map(m => m.flow));
+                    dataPoints.push(maxFlow);
+                } else {
+                    dataPoints.push(null);
+                }
+            }
+
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+
+            monthlyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Макс. поток за день',
+                        data: dataPoints,
+                        borderColor: '#4da6ff',
+                        backgroundColor: 'rgba(77, 166, 255, 0.2)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#4da6ff',
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
+                        spanGaps: true, 
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.parsed.y + ' л/мин'; }
+                            }
+                        },
+                        zoom: {
+                            pan: { enabled: true, mode: 'xy', threshold: 10 },
+                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'День месяца', color: '#888' },
+                            ticks: { color: '#888', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Поток (л/мин)', color: '#888' },
+                            min: 0,
+                            max: 1000,
+                            ticks: { color: '#888', stepSize: 50 },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- ОТКРЫТИЕ МОДАЛКИ (Из клетки календаря) ---
+        function openExpandedView(cell, day, measurements) {
+            vibrate('medium');
+            lastActiveCell = cell;
+            
+            const rect = cell.getBoundingClientRect();
+            const modal = document.getElementById('modalContent');
+            const view = document.getElementById('expandedView');
+            
+            const modalTop = window.innerHeight * 0.1;
+            const insetTop = rect.top - modalTop;
+            const insetBottom = (window.innerHeight * 0.9) - rect.bottom;
+            const insetLeft = rect.left - 20; 
+            const insetRight = (window.innerWidth - 20) - rect.right;
+            
+            modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+            
+            const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
+            document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
+            
+            const list = document.getElementById('measurementList');
+            list.innerHTML = ''; 
+            
+            if (measurements.length === 0) {
+                list.innerHTML = `<div style="text-align:center; color:#888; margin-top:20px;">Нет данных за этот день</div>`;
+            } else {
+                measurements.sort((a, b) => a.time.localeCompare(b.time));
+                measurements.forEach((m) => {
+                    const item = document.createElement('div');
+                    item.className = 'measurement-item';
+                    // Сохраняем элемент и открываем график с расширением
+                    item.addEventListener('click', function() { 
+                        vibrate('light'); 
+                        showGraph(m, this); 
+                    });
+                    item.innerHTML = `<span class="m-time">🕒 ${m.time}</span><span class="m-value">${m.flow.toFixed(2)} л/м</span>`;
+                    list.appendChild(item);
+                });
+            }
+
+            showListView(true); // true означает мгновенный сброс без анимации
+
+            setTimeout(() => {
+                modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
+                view.classList.add('active');
+            }, 10);
+        }
+
+        // --- ЗАКРЫТИЕ МОДАЛКИ (Сжатие в клетку) ---
+        function closeExpandedView() {
+            vibrate('light');
+            const view = document.getElementById('expandedView');
+            const modal = document.getElementById('modalContent');
+            view.classList.remove('active');
+            
+            if (lastActiveCell) {
+                const rect = lastActiveCell.getBoundingClientRect();
+                const modalTop = window.innerHeight * 0.1;
+                const insetTop = rect.top - modalTop;
+                const insetBottom = (window.innerHeight * 0.9) - rect.bottom;
+                const insetLeft = rect.left - 20;
+                const insetRight = (window.innerWidth - 20) - rect.right;
+                modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+            } else {
+                modal.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
+            }
+            setTimeout(() => { if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } }, 500);
+        }
+
+        // --- ВОЗВРАТ К СПИСКУ ИЗ ГРАФИКА (Сжатие графика в строку) ---
+        function showListView(instant = false) {
+            const list = document.getElementById('listView');
+            const graph = document.getElementById('graphContainer');
+            const modal = document.getElementById('modalContent');
+            
+            list.style.zIndex = '10';
+
+            if (instant || !lastClickedItem) {
+                graph.style.display = 'none';
+                graph.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
+                if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
+                return;
+            }
+
+            // Вычисляем координаты нажатой ранее строки
+            const rect = lastClickedItem.getBoundingClientRect();
+            const parentRect = modal.getBoundingClientRect();
+
+            const insetTop = rect.top - parentRect.top - 20; // 20px - padding модалки
+            const insetBottom = parentRect.bottom - rect.bottom - 20;
+            const insetLeft = rect.left - parentRect.left - 20;
+            const insetRight = parentRect.right - rect.right - 20;
+
+            // Анимируем сжатие графика
+            graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+
+            setTimeout(() => {
+                graph.style.display = 'none';
+                if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
+            }, 400); // Ждем окончания анимации
+        }
+
+        // --- ОТКРЫТИЕ ГРАФИКА ИЗ СПИСКА (Расширение из строки) ---
+        function showGraph(measurement, itemElement) {
+            lastClickedItem = itemElement;
+            
+            const graph = document.getElementById('graphContainer');
+            const list = document.getElementById('listView');
+            const modal = document.getElementById('modalContent');
+            
+            list.style.zIndex = '1';
+            graph.style.display = 'flex';
+            graph.style.zIndex = '10';
+            
+            // Координаты нажатой строки
+            const rect = itemElement.getBoundingClientRect();
+            const parentRect = modal.getBoundingClientRect();
+
+            const insetTop = rect.top - parentRect.top - 20; 
+            const insetBottom = parentRect.bottom - rect.bottom - 20;
+            const insetLeft = rect.left - parentRect.left - 20;
+            const insetRight = parentRect.right - rect.right - 20;
+
+            // Ставим начальный размер
+            graph.style.transition = 'none';
+            graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+            
+            void graph.offsetWidth;
+
+            // Анимируем расширение
+            graph.style.transition = 'clip-path 0.4s cubic-bezier(0.34, 1.3, 0.64, 1)';
+            graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
+
+            document.getElementById('graphTitle').innerText = `Замер в ${measurement.time}`;
+            
+            const ctx = document.getElementById('breathChart').getContext('2d');
+            let labels = [];
+            let dataPoints = [];
+            
+            if (measurement.curve && measurement.curve !== "undefined" && measurement.curve !== "") {
+                let realCurve = JSON.parse(measurement.curve);
+                for (let i = 0; i < realCurve.length; i++) {
+                    labels.push((i * 0.05).toFixed(2) + 'с');
+                    dataPoints.push(realCurve[i]);
+                }
+            } else {
+                const peak = measurement.flow; 
+                for (let i = 0; i <= 30; i++) {
+                    const t = i * 0.08; 
+                    labels.push(t.toFixed(1) + 'с');
+                    let val = peak * 1.415 * Math.sin(t * Math.PI / 1.5) * Math.exp(-t * 0.5);
+                    if (val < 0) val = 0; 
+                    dataPoints.push(val.toFixed(1));
+                }
+            }
+
+            if (breathChartInstance) breathChartInstance.destroy(); 
+            
+            breathChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{ 
+                        label: 'Поток', 
+                        data: dataPoints, 
+                        borderColor: '#4da6ff', 
+                        backgroundColor: 'rgba(77, 166, 255, 0.2)', 
+                        borderWidth: 3, 
+                        pointRadius: 0, 
+                        pointHoverRadius: 6, 
+                        tension: 0.4, 
+                        fill: true 
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { ticks: { color: '#888', maxTicksLimit: 6 }, grid: { color: 'rgba(255,255,255,0.05)' } }, 
+                        y: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true } 
+                    }
+                }
+            });
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar();
+        });
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar();
+        });
+        document.getElementById('prevMonthGraph').addEventListener('click', () => {
+            currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); renderMonthlyGraph();
+        });
+        document.getElementById('nextMonthGraph').addEventListener('click', () => {
+            currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); renderMonthlyGraph();
+        });
+
+        loadData();
+    </script>
+</body>
+</html>
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 18 - UNIVERSAL MORPHING) =================== -->
