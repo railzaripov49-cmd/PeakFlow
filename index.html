@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 18 - UNIVERSAL MORPHING) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 20 - CINEMATIC TRANSITIONS) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -31,6 +31,9 @@
             z-index: 1;
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
+            
+            /* ЗАМЕДЛИЛИ ДО 0.7с */
+            transition: clip-path 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         
         .view.active {
@@ -94,7 +97,7 @@
             backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%);
             border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.5); border-left: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 16px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.5);
-            overflow: hidden; transition: transform 0.1s, box-shadow 0.3s;
+            overflow: hidden; transition: transform 0.2s, box-shadow 0.3s;
         }
         .day-cell.has-data {
             box-shadow: 0 8px 16px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.5), 0 0 10px rgba(77, 166, 255, 0.2);
@@ -104,7 +107,7 @@
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
             background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%); pointer-events: none; border-radius: inherit;
         }
-        .day-cell:active { transform: scale(0.88); background: rgba(77, 166, 255, 0.3); box-shadow: 0 0 20px rgba(77, 166, 255, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.8); }
+        .day-cell:active { transform: scale(0.85); background: rgba(77, 166, 255, 0.4); box-shadow: 0 0 30px rgba(77, 166, 255, 1), inset 0 0 20px rgba(255, 255, 255, 1); }
         .day-cell.today { background: linear-gradient(135deg, rgba(77, 166, 255, 0.35) 0%, rgba(77, 166, 255, 0.1) 100%); border-top: 1px solid rgba(77, 166, 255, 0.9); box-shadow: 0 4px 15px rgba(77, 166, 255, 0.3), inset 0 1px 2px rgba(255,255,255,0.6); }
         .day-num { font-size: 18px; font-weight: 600; color: #fff; z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         .day-val { font-size: 10px; font-weight: bold; color: #ff4d4d; position: absolute; bottom: 6px; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
@@ -122,7 +125,7 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.5);
             border-radius: 30px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 0.3s, background 0.3s;
+            transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 0.4s, background 0.4s;
             z-index: 500;
             overflow: hidden;
             cursor: pointer;
@@ -140,7 +143,7 @@
         .fab-plus {
             position: absolute;
             font-size: 28px; font-weight: 300; color: white;
-            transition: opacity 0.2s, transform 0.3s;
+            transition: opacity 0.3s, transform 0.4s;
         }
         #fabContainer.expanded .fab-plus {
             opacity: 0; transform: rotate(45deg); pointer-events: none;
@@ -150,13 +153,13 @@
             display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 12px; box-sizing: border-box;
             opacity: 0; pointer-events: none; 
             transform: translateY(20px) scale(0.9); 
-            transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         #fabContainer.expanded .fab-menu-content {
             opacity: 1; pointer-events: auto; 
             transform: translateY(0) scale(1);
-            transition-delay: 0.05s;
+            transition-delay: 0.1s;
         }
 
         .fab-action-btn {
@@ -185,8 +188,8 @@
         #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
         /* МОДАЛЬНОЕ ОКНО */
-        #expandedView { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-        #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); opacity: 0; transition: opacity 0.3s; }
+        #expandedView { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
+        #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); opacity: 0; transition: opacity 0.4s; }
         
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
@@ -194,13 +197,16 @@
             border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.15); border-top: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.3);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
-            clip-path: inset(50% 50% 50% 50% round 16px); transition: clip-path 0.5s cubic-bezier(0.34, 1.3, 0.64, 1);
+            
+            /* ЗАМЕДЛИЛИ ДО 0.7с И СДЕЛАЛИ БОЛЕЕ ВЫРАЖЕННУЮ ПРУЖИНУ */
+            clip-path: inset(50% 50% 50% 50% round 16px); 
+            transition: clip-path 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         #expandedView.active { pointer-events: auto; opacity: 1; }
         #expandedView.active::before { opacity: 1; }
         
-        /* ШАПКА МОДАЛКИ (Всегда наверху) */
+        /* ШАПКА МОДАЛКИ */
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; z-index: 100; }
         .expanded-title { font-size: 22px; font-weight: bold; }
         .close-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
@@ -211,6 +217,7 @@
         /* СПИСОК ЗАМЕРОВ */
         #listView { 
             position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; 
+            background: transparent; 
         }
         #measurementList { 
             flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; 
@@ -222,16 +229,23 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%); 
             border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.3); 
             padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; flex-shrink: 0; transition: transform 0.1s;
+            cursor: pointer; flex-shrink: 0; transition: transform 0.2s;
         }
-        .measurement-item:active { transform: scale(0.96); }
+        .measurement-item:active { transform: scale(0.94); }
         .m-time { color: #aaa; font-size: 14px; }
         .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; }
 
         /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА */
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 1;
-            clip-path: inset(50% 50% 50% 50% round 16px); transition: clip-path 0.4s cubic-bezier(0.34, 1.3, 0.64, 1);
+            background: rgba(25, 25, 25, 0.98); /* Плотный фон */
+            border-radius: 16px;
+            padding: 10px;
+            box-sizing: border-box;
+            
+            /* ЗАМЕДЛИЛИ ДО 0.6с */
+            clip-path: inset(50% 50% 50% 50% round 16px); 
+            transition: clip-path 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .back-btn {
             background: rgba(255,255,255,0.1); border: none; color: #4da6ff;
@@ -318,7 +332,7 @@
         let currentMonth = new Date().getMonth(); 
         let allData = {}; 
         let lastActiveCell = null; 
-        let lastClickedItem = null; // Запоминаем строку, на которую нажали
+        let lastClickedItem = null; 
         let currentView = 'calendar';
         let monthlyChartInstance = null;
         let breathChartInstance = null; 
@@ -375,12 +389,11 @@
 
             void incomingView.offsetWidth;
 
-            // Новый экран расширяется
-            incomingView.style.transition = 'clip-path 0.5s cubic-bezier(0.34, 1.2, 0.64, 1)';
+            // ЗАМЕДЛЯЕМ АНИМАЦИЮ ЭКРАНОВ
+            incomingView.style.transition = 'clip-path 0.7s cubic-bezier(0.2, 0.8, 0.2, 1)';
             incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
             
-            // Старый экран сжимается
-            outgoingView.style.transition = 'clip-path 0.5s cubic-bezier(0.34, 1.2, 0.64, 1)';
+            outgoingView.style.transition = 'clip-path 0.7s cubic-bezier(0.2, 0.8, 0.2, 1)';
             outgoingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
 
             currentView = targetView;
@@ -393,8 +406,8 @@
                 incomingView.style.zIndex = '10';
                 incomingView.style.transition = '';
                 outgoingView.style.transition = '';
-                outgoingView.style.clipPath = ''; // Сброс
-            }, 500);
+                outgoingView.style.clipPath = '';
+            }, 700); // Таймаут равен длительности анимации
         }
 
         function showToast(msg) {
@@ -540,7 +553,6 @@
             });
         }
 
-        // --- ОТКРЫТИЕ МОДАЛКИ (Из клетки календаря) ---
         function openExpandedView(cell, day, measurements) {
             vibrate('medium');
             lastActiveCell = cell;
@@ -570,7 +582,6 @@
                 measurements.forEach((m) => {
                     const item = document.createElement('div');
                     item.className = 'measurement-item';
-                    // Сохраняем элемент и открываем график с расширением
                     item.addEventListener('click', function() { 
                         vibrate('light'); 
                         showGraph(m, this); 
@@ -580,7 +591,7 @@
                 });
             }
 
-            showListView(true); // true означает мгновенный сброс без анимации
+            showListView(true); 
 
             setTimeout(() => {
                 modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
@@ -588,7 +599,6 @@
             }, 10);
         }
 
-        // --- ЗАКРЫТИЕ МОДАЛКИ (Сжатие в клетку) ---
         function closeExpandedView() {
             vibrate('light');
             const view = document.getElementById('expandedView');
@@ -606,17 +616,18 @@
             } else {
                 modal.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
             }
-            setTimeout(() => { if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } }, 500);
+            setTimeout(() => { if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } }, 700);
         }
 
-        // --- ВОЗВРАТ К СПИСКУ ИЗ ГРАФИКА (Сжатие графика в строку) ---
         function showListView(instant = false) {
             const list = document.getElementById('listView');
             const graph = document.getElementById('graphContainer');
             const modal = document.getElementById('modalContent');
             
+            list.style.display = 'flex'; 
+            list.style.opacity = '1';
             list.style.zIndex = '10';
-
+            
             if (instant || !lastClickedItem) {
                 graph.style.display = 'none';
                 graph.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
@@ -624,25 +635,24 @@
                 return;
             }
 
-            // Вычисляем координаты нажатой ранее строки
             const rect = lastClickedItem.getBoundingClientRect();
             const parentRect = modal.getBoundingClientRect();
 
-            const insetTop = rect.top - parentRect.top - 20; // 20px - padding модалки
+            const insetTop = rect.top - parentRect.top - 20; 
             const insetBottom = parentRect.bottom - rect.bottom - 20;
             const insetLeft = rect.left - parentRect.left - 20;
             const insetRight = parentRect.right - rect.right - 20;
 
-            // Анимируем сжатие графика
+            // СЖАТИЕ ГРАФИКА ОБРАТНО В СТРОКУ (0.6с)
+            graph.style.transition = 'clip-path 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
 
             setTimeout(() => {
                 graph.style.display = 'none';
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
-            }, 400); // Ждем окончания анимации
+            }, 600); 
         }
 
-        // --- ОТКРЫТИЕ ГРАФИКА ИЗ СПИСКА (Расширение из строки) ---
         function showGraph(measurement, itemElement) {
             lastClickedItem = itemElement;
             
@@ -650,11 +660,9 @@
             const list = document.getElementById('listView');
             const modal = document.getElementById('modalContent');
             
-            list.style.zIndex = '1';
             graph.style.display = 'flex';
-            graph.style.zIndex = '10';
+            graph.style.zIndex = '20';
             
-            // Координаты нажатой строки
             const rect = itemElement.getBoundingClientRect();
             const parentRect = modal.getBoundingClientRect();
 
@@ -663,18 +671,21 @@
             const insetLeft = rect.left - parentRect.left - 20;
             const insetRight = parentRect.right - rect.right - 20;
 
-            // Ставим начальный размер
             graph.style.transition = 'none';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             
             void graph.offsetWidth;
 
-            // Анимируем расширение
-            graph.style.transition = 'clip-path 0.4s cubic-bezier(0.34, 1.3, 0.64, 1)';
+            // РАСШИРЕНИЕ ГРАФИКА ИЗ СТРОКИ (0.6с)
+            graph.style.transition = 'clip-path 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
             graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
 
             document.getElementById('graphTitle').innerText = `Замер в ${measurement.time}`;
             
+            setTimeout(() => {
+                list.style.display = 'none';
+            }, 600); 
+
             const ctx = document.getElementById('breathChart').getContext('2d');
             let labels = [];
             let dataPoints = [];
@@ -742,4 +753,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 18 - UNIVERSAL MORPHING) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 20 - CINEMATIC TRANSITIONS) =================== -->
