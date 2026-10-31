@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 6.1 - IOS BUBBLE) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 6.3 - MORNING GREEN & EVENING BLUE) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -29,32 +29,43 @@
         /* --- КАЛЕНДАРЬ --- */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 25px; font-size: 32px; font-weight: 600; color: #222;
+            margin-bottom: 25px; font-size: 32px; font-weight: 600; color: #fff;
             position: relative; z-index: 1;
         }
         .header button { 
-            background: #f0f0f0; color: #333; border: none; font-size: 24px; 
+            background: #1c1c1e; color: #fff; border: none; font-size: 24px; 
             cursor: pointer; padding: 5px 15px; border-radius: 8px;
+            border-top: 1px solid rgba(255,255,255,0.2);
         }
         .weekdays { 
             display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
-            font-weight: 600; margin-bottom: 15px; color: #777; font-size: 14px; 
+            font-weight: 600; margin-bottom: 15px; color: #888; font-size: 14px; 
             position: relative; z-index: 1;
         }
-        .weekends { color: #e74c3c; }
+        .weekends { color: #ff4d4d; }
         .calendar { 
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; 
             position: relative; z-index: 1;
         }
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            border-radius: 12px; position: relative; background: rgba(255, 255, 255, 0.6);
-            border: 1px solid #f0f0f0; transition: transform 0.15s ease-out, box-shadow 0.15s;
+            border-radius: 16px; position: relative; background: #1c1c1e;
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            transition: transform 0.15s ease-out, background 0.15s;
+            cursor: pointer;
         }
-        .day-cell.today { background-color: #f0f8ff; border: 1px solid #2980b9; }
-        .day-num { font-size: 20px; font-weight: 500; color: #2980b9; }
-        .day-val { font-size: 10px; font-weight: bold; color: #e74c3c; position: absolute; bottom: 4px; }
-        .empty-cell { background: transparent; border: none; }
+        .day-cell:active { transform: scale(0.9); background: #2c2c2e; }
+        .day-cell.today { background: #0A84FF; border: 1px solid #0A84FF; }
+        .day-num { font-size: 20px; font-weight: 500; color: #fff; }
+        .day-val { font-size: 10px; font-weight: bold; position: absolute; bottom: 6px; }
+        
+        /* Цвета для значений в календаре (по умолчанию) */
+        .val-green { color: #2ecc71; }
+        .val-blue { color: #0A84FF; }
+        .day-cell.today .day-val { color: rgba(255,255,255,0.9); }
+
+        .empty-cell { background: transparent; border: none; cursor: default; }
+        .empty-cell:active { transform: none; background: transparent; }
 
         /* --- МОДАЛКА И ГРАФИК --- */
         #expandedView { 
@@ -64,7 +75,7 @@
         }
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
             opacity: 0; transition: opacity 0.3s; 
         }
         #modalContent {
@@ -92,19 +103,20 @@
         .measurement-item { 
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255, 255, 255, 0.05); 
             padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; flex-shrink: 0; transition: transform 0.1s;
+            cursor: pointer; flex-shrink: 0; transition: transform 0.1s, background 0.2s;
         }
+        .measurement-item:active { transform: scale(0.98); background: rgba(255,255,255,0.15); }
         .m-time { color: #aaa; font-size: 14px; }
-        .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; }
+        .m-value { font-size: 18px; font-weight: bold; }
 
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
             background: #151515; border-radius: 16px; padding: 10px; box-sizing: border-box;
         }
-        .back-btn { background: rgba(255,255,255,0.1); border: none; color: #4da6ff; font-size: 14px; padding: 8px 15px; border-radius: 10px; margin-bottom: 15px; cursor: pointer; align-self: flex-start; flex-shrink: 0; }
+        .back-btn { background: rgba(255,255,255,0.1); border: none; color: #0A84FF; font-size: 14px; padding: 8px 15px; border-radius: 10px; margin-bottom: 15px; cursor: pointer; align-self: flex-start; flex-shrink: 0; }
         .chart-wrapper { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; }
 
-        /* --- FAB МЕНЮ (С ПРУЖИННОЙ АНИМАЦИЕЙ) --- */
+        /* --- FAB МЕНЮ --- */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
             width: 56px; height: 56px;
@@ -141,7 +153,7 @@
         }
         .fab-action-btn:active { background: rgba(255,255,255,0.2); }
 
-        /* Скрытые экраны для переключения */
+        /* Скрытые экраны */
         .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 20px; box-sizing: border-box; }
         .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
     </style>
@@ -151,12 +163,12 @@
 
     <!-- КАЛЕНДАРЬ -->
     <div id="calendarView" class="view active">
-        <div class="header" style="color: #fff;">
-            <button id="prevBtn" style="background: #333; color: #fff;">&#8249;</button>
+        <div class="header">
+            <button id="prevBtn">&#8249;</button>
             <span id="monthTitle"></span>
-            <button id="nextBtn" style="background: #333; color: #fff;">&#8250;</button>
+            <button id="nextBtn">&#8250;</button>
         </div>
-        <div class="weekdays" style="color: #888;">
+        <div class="weekdays">
             <div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div class="weekends">СБ</div><div class="weekends">ВС</div>
         </div>
         <div class="calendar" id="calendarGrid"></div>
@@ -164,10 +176,10 @@
 
     <!-- МЕСЯЧНЫЙ ГРАФИК -->
     <div id="graphView" class="view">
-        <div class="header" style="color: #fff;">
-            <button id="prevMonthGraph" style="background: #333; color: #fff;">&#8249;</button>
+        <div class="header">
+            <button id="prevMonthGraph">&#8249;</button>
             <span id="monthTitleGraph"></span>
-            <button id="nextMonthGraph" style="background: #333; color: #fff;">&#8250;</button>
+            <button id="nextMonthGraph">&#8250;</button>
         </div>
         <div style="flex: 1; position: relative; width: 100%; height: 100%;">
             <canvas id="monthlyChart"></canvas>
@@ -284,9 +296,10 @@
                     
                     const dateKey = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
                     const timeStr = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0') + ':' + String(dateObj.getSeconds()).padStart(2, '0');
+                    const hour = dateObj.getHours();
                     
                     if (!allData[dateKey]) allData[dateKey] = [];
-                    allData[dateKey].push({ time: timeStr, flow: flow, curve: curve });
+                    allData[dateKey].push({ time: timeStr, flow: flow, curve: curve, hour: hour });
                 }
                 renderCalendar();
             } catch (error) {
@@ -322,7 +335,8 @@
                 
                 if (measurements.length > 0) {
                     const maxFlow = Math.max(...measurements.map(m => m.flow));
-                    cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val">${maxFlow.toFixed(1)}</span>`;
+                    const colorClass = maxFlow <= 12 ? 'val-green' : 'val-blue';
+                    cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val ${colorClass}">${maxFlow.toFixed(1)}</span>`;
                 } else {
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
                 }
@@ -335,16 +349,24 @@
         function renderMonthlyGraph() {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            let labels = [], dataPoints = [];
+            let labels = [];
+            let morningData = [];
+            let eveningData = [];
 
             for (let day = 1; day <= daysInMonth; day++) {
                 labels.push(day);
                 const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
                 const measurements = allData[dateKey];
+                
                 if (measurements && measurements.length > 0) {
-                    dataPoints.push(Math.max(...measurements.map(m => m.flow)));
+                    const morning = measurements.filter(m => m.hour < 12);
+                    const evening = measurements.filter(m => m.hour >= 12);
+                    
+                    morningData.push(morning.length > 0 ? Math.max(...morning.map(m => m.flow)) : null);
+                    eveningData.push(evening.length > 0 ? Math.max(...evening.map(m => m.flow)) : null);
                 } else {
-                    dataPoints.push(null);
+                    morningData.push(null);
+                    eveningData.push(null);
                 }
             }
 
@@ -354,15 +376,36 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Поток', data: dataPoints, borderColor: '#4da6ff',
-                        backgroundColor: 'rgba(77, 166, 255, 0.2)', borderWidth: 3,
-                        pointBackgroundColor: '#fff', tension: 0.3, spanGaps: true, fill: true
-                    }]
+                    datasets: [
+                        {
+                            label: 'Утро (до 12)',
+                            data: morningData,
+                            borderColor: '#2ecc71', // ЗЕЛЕНАЯ ЛИНИЯ
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#2ecc71',
+                            tension: 0.3,
+                            spanGaps: true,
+                            fill: false
+                        },
+                        {
+                            label: 'День/Вечер (после 12)',
+                            data: eveningData,
+                            borderColor: '#0A84FF', // СИНЯЯ ЛИНИЯ
+                            backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#0A84FF',
+                            tension: 0.3,
+                            spanGaps: true,
+                            fill: false
+                        }
+                    ]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { legend: { display: true, labels: { color: '#888' } } },
                     scales: {
                         x: { ticks: { color: '#888' }, grid: { display: false } },
                         y: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
@@ -387,7 +430,9 @@
                     const item = document.createElement('div');
                     item.className = 'measurement-item';
                     item.addEventListener('click', function() { vibrate('light'); showGraph(m, this); });
-                    item.innerHTML = `<span class="m-time">🕒 ${m.time}</span><span class="m-value">${m.flow.toFixed(2)} л/м</span>`;
+                    
+                    const colorClass = m.flow <= 12 ? 'val-green' : 'val-blue';
+                    item.innerHTML = `<span class="m-time">🕒 ${m.time}</span><span class="m-value ${colorClass}">${m.flow.toFixed(2)} л/м</span>`;
                     list.appendChild(item);
                 });
             }
@@ -416,6 +461,11 @@
             const ctx = document.getElementById('breathChart').getContext('2d');
             let labels = [], dataPoints = [];
             
+            // Определяем цвет для конкретного графика выдоха (утро/день)
+            const isMorning = measurement.hour < 12;
+            const lineColor = isMorning ? '#2ecc71' : '#0A84FF'; 
+            const bgColor = isMorning ? 'rgba(46, 204, 113, 0.2)' : 'rgba(10, 132, 255, 0.2)';
+            
             if (measurement.curve && measurement.curve !== "undefined") {
                 let realCurve = JSON.parse(measurement.curve);
                 for (let i = 0; i < realCurve.length; i++) {
@@ -435,7 +485,12 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{ label: 'Поток', data: dataPoints, borderColor: '#4da6ff', backgroundColor: 'rgba(77, 166, 255, 0.2)', borderWidth: 3, pointRadius: 0, tension: 0.4, fill: true }]
+                    datasets: [{ 
+                        label: 'Поток', data: dataPoints, 
+                        borderColor: lineColor,
+                        backgroundColor: bgColor, 
+                        borderWidth: 3, pointRadius: 0, tension: 0.4, fill: true 
+                    }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#888' } }, y: { ticks: { color: '#888' }, beginAtZero: true } } }
             });
@@ -450,4 +505,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 6.1) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 6.3) =================== -->
