@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 25 - CLEAR GLASS & PERFECT MATH) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 26 - BULLETPROOF RENDER) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -185,16 +185,16 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        /* МОДАЛЬНОЕ ОКНО (МЕНЬШЕ МАТОВОСТИ) */
+        /* МОДАЛЬНОЕ ОКНО (БОЛЕЕ ПРОЗРАЧНОЕ) */
         #expandedView { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
         #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); opacity: 0; transition: opacity 0.4s; }
         
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
             
-            /* МЕНЬШЕ МАТОВОСТИ: Прозрачнее фон, меньше размытие */
+            /* МЕНЬШЕ МАТОВОСТИ */
             background: rgba(25, 25, 25, 0.45);
-            backdrop-filter: blur(12px) saturate(120%); -webkit-backdrop-filter: blur(12px) saturate(120%);
+            backdrop-filter: blur(10px) saturate(120%); -webkit-backdrop-filter: blur(10px) saturate(120%);
             border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.3);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
@@ -218,7 +218,6 @@
         #listView { 
             position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; 
             background: transparent; 
-            transition: opacity 0.2s; 
         }
         #measurementList { 
             flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; 
@@ -242,7 +241,7 @@
             
             /* МЕНЬШЕ МАТОВОСТИ */
             background: rgba(15, 15, 15, 0.6) !important;
-            backdrop-filter: blur(15px) saturate(120%); -webkit-backdrop-filter: blur(15px) saturate(120%);
+            backdrop-filter: blur(10px) saturate(120%); -webkit-backdrop-filter: blur(10px) saturate(120%);
             
             border-radius: 16px;
             padding: 10px;
@@ -556,7 +555,7 @@
             });
         }
 
-        // --- ОТКРЫТИЕ МОДАЛКИ (ИСПРАВЛЕНО) ---
+        // --- ОТКРЫТИЕ МОДАЛКИ (ИДЕАЛЬНЫЙ РЕНДЕР) ---
         function openExpandedView(cell, day, measurements) {
             vibrate('medium');
             lastActiveCell = cell;
@@ -598,13 +597,14 @@
             }
 
             showListView(true); 
-
-            void modal.offsetWidth;
-
-            modal.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-            modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
-            
             view.classList.add('active');
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+                    modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
+                });
+            });
         }
 
         function closeExpandedView() {
@@ -633,20 +633,16 @@
             }, 650);
         }
 
-        // --- ВОЗВРАТ К СПИСКУ (ИСПРАВЛЕНО) ---
+        // --- ВОЗВРАТ К СПИСКУ ---
         function showListView(instant = false) {
             const list = document.getElementById('listView');
             const graph = document.getElementById('graphContainer');
-            const wrapper = document.getElementById('innerViewsWrapper'); // Берем контейнер
+            const wrapper = document.getElementById('innerViewsWrapper');
             
             list.style.display = 'flex';
-            list.style.opacity = '1';
-            list.style.zIndex = '10';
             
             if (instant || !lastClickedItem) {
-                graph.style.transition = 'none';
                 graph.style.display = 'none';
-                graph.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
                 return;
             }
@@ -668,19 +664,18 @@
             }, 650); 
         }
 
-        // --- ОТКРЫТИЕ ГРАФИКА (ИСПРАВЛЕНО) ---
+        // --- ОТКРЫТИЕ ГРАФИКА ---
         function showGraph(measurement, itemElement) {
             lastClickedItem = itemElement;
             
             const graph = document.getElementById('graphContainer');
             const list = document.getElementById('listView');
-            const wrapper = document.getElementById('innerViewsWrapper'); // Берем контейнер
+            const wrapper = document.getElementById('innerViewsWrapper');
             
-            list.style.opacity = '0';
-            list.style.pointerEvents = 'none';
+            // Мгновенно убираем список, чтобы он не просвечивал
+            list.style.display = 'none';
             
             graph.style.display = 'flex';
-            graph.style.zIndex = '999';
             
             const itemRect = itemElement.getBoundingClientRect();
             const wrapperRect = wrapper.getBoundingClientRect();
@@ -695,11 +690,6 @@
             
             document.getElementById('graphTitle').innerText = `Замер в ${measurement.time}`;
             
-            void graph.offsetWidth;
-
-            graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-            graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
-
             const ctx = document.getElementById('breathChart').getContext('2d');
             let labels = [];
             let dataPoints = [];
@@ -748,6 +738,14 @@
                     }
                 }
             });
+
+            // ИДЕАЛЬНЫЙ ЗАПУСК АНИМАЦИИ
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+                    graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
+                });
+            });
         }
 
         document.getElementById('prevBtn').addEventListener('click', () => {
@@ -767,4 +765,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 25 - CLEAR GLASS & PERFECT MATH) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 26 - BULLETPROOF RENDER) =================== -->
