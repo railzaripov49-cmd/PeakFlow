@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 6.3 - MORNING GREEN & EVENING BLUE) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 7.0 - IOS NATIVE DESIGN) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,65 +9,91 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     
     <style>
-        /* ГЛОБАЛЬНЫЕ СТИЛИ */
+        /* =========================================
+           iOS ДИЗАЙН (DARK MODE)
+           ========================================= */
+        :root {
+            --ios-bg: #000000;
+            --ios-card: #1C1C1E;
+            --ios-text: #FFFFFF;
+            --ios-text-secondary: #8E8E93;
+            --ios-blue: #0A84FF;
+            --ios-green: #30D158;
+            --ios-red: #FF453A;
+            --ios-glass: rgba(28, 28, 30, 0.75);
+            --ios-glass-border: rgba(255, 255, 255, 0.1);
+            --ios-spring: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
         body { 
-            background-color: #050505; color: #ffffff; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--ios-bg); 
+            color: var(--ios-text); 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box;
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
         }
 
-        /* --- ЯДРО --- */
+        /* --- ЯДРО НА ФОНЕ --- */
         #core {
             position: fixed; top: 50%; left: 50%; width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(41, 128, 185, 0.4) 0%, rgba(41, 128, 185, 0) 70%);
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
             border-radius: 50%; transform: translate(-50%, -50%) scale(1);
             z-index: 0; pointer-events: none;
             transition: transform 1.5s ease-in-out, opacity 1.5s ease-in-out;
         }
 
-        /* --- КАЛЕНДАРЬ --- */
+        /* =========================================
+           КАЛЕНДАРЬ
+           ========================================= */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 25px; font-size: 32px; font-weight: 600; color: #fff;
-            position: relative; z-index: 1;
+            margin-bottom: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+            position: relative; z-index: 1; flex-shrink: 0;
         }
         .header button { 
-            background: #1c1c1e; color: #fff; border: none; font-size: 24px; 
-            cursor: pointer; padding: 5px 15px; border-radius: 8px;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1); border: none; color: var(--ios-text); 
+            font-size: 18px; width: 40px; height: 40px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: background 0.2s;
         }
+        .header button:active { background: rgba(255,255,255,0.2); }
+
         .weekdays { 
             display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
-            font-weight: 600; margin-bottom: 15px; color: #888; font-size: 14px; 
-            position: relative; z-index: 1;
+            font-weight: 500; margin-bottom: 8px; color: var(--ios-text-secondary); font-size: 13px; 
+            position: relative; z-index: 1; flex-shrink: 0;
         }
-        .weekends { color: #ff4d4d; }
+        .weekends { color: var(--ios-red); }
+        
         .calendar { 
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; 
-            position: relative; z-index: 1;
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; 
+            position: relative; z-index: 1; align-content: start; 
         }
+
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            border-radius: 16px; position: relative; background: #1c1c1e;
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            transition: transform 0.15s ease-out, background 0.15s;
-            cursor: pointer;
+            border-radius: 18px; position: relative; cursor: pointer;
+            background: var(--ios-card); border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s var(--ios-spring), background 0.2s;
         }
-        .day-cell:active { transform: scale(0.9); background: #2c2c2e; }
-        .day-cell.today { background: #0A84FF; border: 1px solid #0A84FF; }
-        .day-num { font-size: 20px; font-weight: 500; color: #fff; }
-        .day-val { font-size: 10px; font-weight: bold; position: absolute; bottom: 6px; }
+        .day-cell:active { transform: scale(0.9); background: #2C2C2E; }
+        .day-cell.today { background: var(--ios-blue); border-color: var(--ios-blue); }
         
-        /* Цвета для значений в календаре (по умолчанию) */
-        .val-green { color: #2ecc71; }
-        .val-blue { color: #0A84FF; }
+        .day-num { font-size: 17px; font-weight: 500; color: var(--ios-text); }
+        .day-val { font-size: 10px; font-weight: 600; position: absolute; bottom: 5px; }
+        
+        /* Цвета для значений */
+        .val-green { color: var(--ios-green); }
+        .val-blue { color: var(--ios-blue); }
         .day-cell.today .day-val { color: rgba(255,255,255,0.9); }
 
-        .empty-cell { background: transparent; border: none; cursor: default; }
+        .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; }
         .empty-cell:active { transform: none; background: transparent; }
 
-        /* --- МОДАЛКА И ГРАФИК --- */
+        /* =========================================
+           МОДАЛЬНОЕ ОКНО И ГРАФИК
+           ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
             pointer-events: none; opacity: 0; transition: opacity 0.3s; 
@@ -75,48 +101,66 @@
         }
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
             opacity: 0; transition: opacity 0.3s; 
         }
+        
         #modalContent {
             position: relative; width: 90%; max-width: 400px; height: 70vh;
-            background: rgba(30, 30, 30, 0.95); border-radius: 24px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            background: var(--ios-glass);
+            border-radius: 24px; border: 1px solid var(--ios-glass-border);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
-            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: scale(0.95); transition: transform 0.3s var(--ios-spring);
         }
+        
         #expandedView.active { pointer-events: auto; opacity: 1; }
         #expandedView.active::before { opacity: 1; }
         #expandedView.active #modalContent { transform: scale(1); }
         
         #modalInner { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
-        .expanded-title { font-size: 22px; font-weight: bold; color: #fff; }
-        .close-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--ios-text); }
+        .close-btn { 
+            background: rgba(255,255,255,0.1); border: none; color: var(--ios-text); 
+            font-size: 18px; width: 30px; height: 30px; border-radius: 50%; 
+            cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;
+        }
+        .close-btn:active { background: rgba(255,255,255,0.2); }
         
         #innerViewsWrapper { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 16px; }
         
         #listView { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; }
-        #measurementList { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        #measurementList { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         #measurementList::-webkit-scrollbar { display: none; }
         
         .measurement-item { 
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255, 255, 255, 0.05); 
-            padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255, 255, 255, 0.05); 
+            padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
             cursor: pointer; flex-shrink: 0; transition: transform 0.1s, background 0.2s;
         }
         .measurement-item:active { transform: scale(0.98); background: rgba(255,255,255,0.15); }
-        .m-time { color: #aaa; font-size: 14px; }
-        .m-value { font-size: 18px; font-weight: bold; }
+        .m-time { color: var(--ios-text-secondary); font-size: 15px; font-weight: 500; }
+        .m-value { font-size: 17px; font-weight: 600; }
 
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
-            background: #151515; border-radius: 16px; padding: 10px; box-sizing: border-box;
+            background: var(--ios-card); border-radius: 16px; padding: 15px; box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .back-btn { background: rgba(255,255,255,0.1); border: none; color: #0A84FF; font-size: 14px; padding: 8px 15px; border-radius: 10px; margin-bottom: 15px; cursor: pointer; align-self: flex-start; flex-shrink: 0; }
+        .back-btn { 
+            background: rgba(255,255,255,0.1); border: none; color: var(--ios-blue); 
+            font-size: 15px; font-weight: 500; padding: 8px 14px; border-radius: 10px; 
+            margin-bottom: 15px; cursor: pointer; align-self: flex-start; flex-shrink: 0;
+        }
+        .back-btn:active { background: rgba(255,255,255,0.2); }
         .chart-wrapper { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; }
 
-        /* --- FAB МЕНЮ --- */
+        /* =========================================
+           FAB МЕНЮ
+           ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
             width: 56px; height: 56px;
@@ -126,34 +170,41 @@
             box-shadow: 0 8px 30px rgba(0,0,0,0.4);
             border-radius: 28px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: width 0.4s var(--ios-spring), height 0.4s var(--ios-spring), border-radius 0.4s var(--ios-spring);
             z-index: 500; overflow: hidden; cursor: pointer;
         }
         
         #fabContainer.expanded {
             width: 120px; height: 110px; border-radius: 24px;
             background: rgba(30, 30, 30, 0.85);
+            cursor: default;
         }
 
-        .fab-plus { position: absolute; font-size: 32px; font-weight: 300; color: white; transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .fab-plus { 
+            position: absolute; font-size: 32px; font-weight: 300; color: white; 
+            transition: opacity 0.2s, transform 0.3s var(--ios-spring); 
+        }
         #fabContainer.expanded .fab-plus { opacity: 0; transform: rotate(45deg) scale(0.5); pointer-events: none; }
 
         .fab-menu-content {
             display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 12px; box-sizing: border-box;
             opacity: 0; pointer-events: none; transform: scale(0.8) translateY(10px);
-            transition: opacity 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 0.2s, transform 0.4s var(--ios-spring);
         }
         
-        #fabContainer.expanded .fab-menu-content { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); transition-delay: 0.05s; }
+        #fabContainer.expanded .fab-menu-content { 
+            opacity: 1; pointer-events: auto; 
+            transform: scale(1) translateY(0); transition-delay: 0.05s; 
+        }
 
         .fab-action-btn {
             background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 12px; color: white;
             display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500;
-            cursor: pointer; transition: background 0.2s; width: 100%;
+            cursor: pointer; transition: background 0.2s, transform 0.1s; width: 100%;
         }
-        .fab-action-btn:active { background: rgba(255,255,255,0.2); }
+        .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
 
-        /* Скрытые экраны */
+        /* Экраны */
         .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 20px; box-sizing: border-box; }
         .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
     </style>
@@ -231,14 +282,14 @@
         let breathChartInstance = null; 
         let currentView = 'calendar';
 
-        // Анимация ядра
+        // Плавная анимация ядра
         const core = document.getElementById('core');
         setInterval(() => {
-            const scale = 0.9 + Math.random() * 0.3;
-            const opacity = 0.6 + Math.random() * 0.4;
+            const scale = 0.9 + Math.random() * 0.2;
+            const opacity = 0.5 + Math.random() * 0.3;
             core.style.transform = `translate(-50%, -50%) scale(${scale})`;
             core.style.opacity = opacity;
-        }, 1500);
+        }, 2000);
 
         function vibrate(type) {
             if (tg.HapticFeedback) {
@@ -378,26 +429,26 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Утро (до 12)',
+                            label: 'Утро',
                             data: morningData,
-                            borderColor: '#2ecc71', // ЗЕЛЕНАЯ ЛИНИЯ
-                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderColor: '#30D158', // iOS Green
+                            backgroundColor: 'rgba(48, 209, 88, 0.1)',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
-                            pointBorderColor: '#2ecc71',
-                            tension: 0.3,
+                            pointBorderColor: '#30D158',
+                            tension: 0.4,
                             spanGaps: true,
                             fill: false
                         },
                         {
-                            label: 'День/Вечер (после 12)',
+                            label: 'День/Вечер',
                             data: eveningData,
-                            borderColor: '#0A84FF', // СИНЯЯ ЛИНИЯ
+                            borderColor: '#0A84FF', // iOS Blue
                             backgroundColor: 'rgba(10, 132, 255, 0.1)',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
                             pointBorderColor: '#0A84FF',
-                            tension: 0.3,
+                            tension: 0.4,
                             spanGaps: true,
                             fill: false
                         }
@@ -405,10 +456,12 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: true, labels: { color: '#888' } } },
+                    plugins: { 
+                        legend: { display: true, labels: { color: '#8E8E93', font: { family: '-apple-system' } } } 
+                    },
                     scales: {
-                        x: { ticks: { color: '#888' }, grid: { display: false } },
-                        y: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+                        x: { ticks: { color: '#8E8E93' }, grid: { display: false } },
+                        y: { ticks: { color: '#8E8E93' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
                     }
                 }
             });
@@ -423,7 +476,7 @@
             list.innerHTML = ''; 
             
             if (measurements.length === 0) {
-                list.innerHTML = `<div style="text-align:center; color:#888; margin-top:20px;">Нет данных</div>`;
+                list.innerHTML = `<div style="text-align:center; color:#8E8E93; margin-top:20px; font-size:15px;">Нет данных</div>`;
             } else {
                 measurements.sort((a, b) => a.time.localeCompare(b.time));
                 measurements.forEach((m) => {
@@ -461,10 +514,9 @@
             const ctx = document.getElementById('breathChart').getContext('2d');
             let labels = [], dataPoints = [];
             
-            // Определяем цвет для конкретного графика выдоха (утро/день)
             const isMorning = measurement.hour < 12;
-            const lineColor = isMorning ? '#2ecc71' : '#0A84FF'; 
-            const bgColor = isMorning ? 'rgba(46, 204, 113, 0.2)' : 'rgba(10, 132, 255, 0.2)';
+            const lineColor = isMorning ? '#30D158' : '#0A84FF'; 
+            const bgColor = isMorning ? 'rgba(48, 209, 88, 0.2)' : 'rgba(10, 132, 255, 0.2)';
             
             if (measurement.curve && measurement.curve !== "undefined") {
                 let realCurve = JSON.parse(measurement.curve);
@@ -492,7 +544,14 @@
                         borderWidth: 3, pointRadius: 0, tension: 0.4, fill: true 
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#888' } }, y: { ticks: { color: '#888' }, beginAtZero: true } } }
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { ticks: { color: '#8E8E93' }, grid: { display: false } }, 
+                        y: { ticks: { color: '#8E8E93' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true } 
+                    } 
+                }
             });
         }
 
@@ -505,4 +564,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 6.3) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 7.0) =================== -->
