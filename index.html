@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 26 - BULLETPROOF RENDER) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 27 - SMOOTH & HIDE BUG FIX) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -31,7 +31,7 @@
             z-index: 1;
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
-            transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         }
         
         .view.active {
@@ -185,7 +185,7 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        /* МОДАЛЬНОЕ ОКНО (БОЛЕЕ ПРОЗРАЧНОЕ) */
+        /* МОДАЛЬНОЕ ОКНО */
         #expandedView { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
         #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); opacity: 0; transition: opacity 0.4s; }
         
@@ -200,7 +200,7 @@
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             
             clip-path: inset(50% 50% 50% 50% round 16px); 
-            transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: clip-path;
         }
         
         #expandedView.active { pointer-events: auto; opacity: 1; }
@@ -239,7 +239,7 @@
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
             
-            /* МЕНЬШЕ МАТОВОСТИ */
+            /* МЕНЬШЕ МАТОВОСТИ, ЧТОБЫ ВИДЕТЬ ФОН */
             background: rgba(15, 15, 15, 0.6) !important;
             backdrop-filter: blur(10px) saturate(120%); -webkit-backdrop-filter: blur(10px) saturate(120%);
             
@@ -249,7 +249,7 @@
             border: 1px solid rgba(255,255,255,0.1);
             
             clip-path: inset(50% 50% 50% 50% round 16px); 
-            transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: clip-path;
         }
         .back-btn {
             background: rgba(255,255,255,0.1); border: none; color: #4da6ff;
@@ -390,13 +390,13 @@
             outgoingView.style.transition = 'none';
             outgoingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
 
-            void incomingView.offsetWidth;
-
-            incomingView.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-            incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
-            
-            outgoingView.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-            outgoingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
+            setTimeout(() => {
+                incomingView.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
+                
+                outgoingView.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                outgoingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
+            }, 50);
 
             currentView = targetView;
             if (targetView === 'graph') renderMonthlyGraph();
@@ -409,7 +409,7 @@
                 incomingView.style.transition = '';
                 outgoingView.style.transition = '';
                 outgoingView.style.clipPath = '';
-            }, 650); 
+            }, 850); 
         }
 
         function showToast(msg) {
@@ -555,7 +555,7 @@
             });
         }
 
-        // --- ОТКРЫТИЕ МОДАЛКИ (ИДЕАЛЬНЫЙ РЕНДЕР) ---
+        // --- ОТКРЫТИЕ МОДАЛКИ (ЧЕТКАЯ АНИМАЦИЯ) ---
         function openExpandedView(cell, day, measurements) {
             vibrate('medium');
             lastActiveCell = cell;
@@ -599,12 +599,11 @@
             showListView(true); 
             view.classList.add('active');
 
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    modal.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-                    modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
-                });
-            });
+            // Четкий запуск анимации
+            setTimeout(() => {
+                modal.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
+            }, 50);
         }
 
         function closeExpandedView() {
@@ -630,7 +629,7 @@
             
             setTimeout(() => { 
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } 
-            }, 650);
+            }, 850);
         }
 
         // --- ВОЗВРАТ К СПИСКУ ---
@@ -642,7 +641,9 @@
             list.style.display = 'flex';
             
             if (instant || !lastClickedItem) {
+                graph.style.transition = 'none';
                 graph.style.display = 'none';
+                graph.style.clipPath = `inset(50% 50% 50% 50% round 16px)`;
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
                 return;
             }
@@ -655,16 +656,16 @@
             const insetLeft = itemRect.left - wrapperRect.left;
             const insetRight = wrapperRect.right - itemRect.right;
 
-            graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+            graph.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
 
             setTimeout(() => {
                 graph.style.display = 'none';
                 if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; }
-            }, 650); 
+            }, 850); 
         }
 
-        // --- ОТКРЫТИЕ ГРАФИКА ---
+        // --- ОТКРЫТИЕ ГРАФИКА (ЖЕЛЕЗОБЕТОННАЯ АНИМАЦИЯ) ---
         function showGraph(measurement, itemElement) {
             lastClickedItem = itemElement;
             
@@ -672,9 +673,8 @@
             const list = document.getElementById('listView');
             const wrapper = document.getElementById('innerViewsWrapper');
             
-            // Мгновенно убираем список, чтобы он не просвечивал
+            // Мгновенно скрываем список
             list.style.display = 'none';
-            
             graph.style.display = 'flex';
             
             const itemRect = itemElement.getBoundingClientRect();
@@ -739,13 +739,11 @@
                 }
             });
 
-            // ИДЕАЛЬНЫЙ ЗАПУСК АНИМАЦИИ
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-                    graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
-                });
-            });
+            // Запуск анимации
+            setTimeout(() => {
+                graph.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
+            }, 50);
         }
 
         document.getElementById('prevBtn').addEventListener('click', () => {
@@ -765,4 +763,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 26 - BULLETPROOF RENDER) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 27 - SMOOTH & HIDE BUG FIX) =================== -->
