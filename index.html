@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 21 - SMOOTH & CLEAN) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 23 - TRUE FROSTED GLASS) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -31,8 +31,6 @@
             z-index: 1;
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
-            
-            /* ПЛАВНАЯ АНИМАЦИЯ (Ease-Out) */
             transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
         }
         
@@ -187,14 +185,16 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        /* МОДАЛЬНОЕ ОКНО */
+        /* МОДАЛЬНОЕ ОКНО (МАТОВОЕ СТЕКЛО) */
         #expandedView { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
-        #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); opacity: 0; transition: opacity 0.4s; }
+        #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); opacity: 0; transition: opacity 0.4s; }
         
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
-            background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.8) 100%);
-            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.15); border-top: 1px solid rgba(255, 255, 255, 0.4);
+            /* ПОЛУПРОЗРАЧНЫЙ ФОН С РАЗМЫТИЕМ (Frosted Glass) */
+            background: rgba(30, 30, 30, 0.65);
+            backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.3);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             
@@ -217,6 +217,7 @@
         #listView { 
             position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 10; 
             background: transparent; 
+            transition: opacity 0.2s; 
         }
         #measurementList { 
             flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; 
@@ -234,13 +235,18 @@
         .m-time { color: #aaa; font-size: 14px; }
         .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; }
 
-        /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА */
+        /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА (ТОЖЕ СТЕКЛО) */
         #graphContainer { 
-            position: absolute; inset: 0; display: none; flex-direction: column; z-index: 1;
-            background: #151515; /* ЖЕСТКИЙ НЕПРОЗРАЧНЫЙ ФОН */
+            position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
+            
+            /* ПОЛУПРОЗРАЧНЫЙ ФОН С РАЗМЫТИЕМ */
+            background: rgba(20, 20, 20, 0.75) !important;
+            backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%);
+            
             border-radius: 16px;
             padding: 10px;
             box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.1);
             
             clip-path: inset(50% 50% 50% 50% round 16px); 
             transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
@@ -357,7 +363,6 @@
             }
         });
 
-        // --- ПЕРЕХОД МЕЖДУ КАЛЕНДАРЕМ И ГРАФИКОМ ---
         function switchToView(targetView, e) {
             if(e) e.stopPropagation(); 
             vibrate('medium');
@@ -387,7 +392,6 @@
 
             void incomingView.offsetWidth;
 
-            // ПЛАВНАЯ АНИМАЦИЯ ЭКРАНОВ
             incomingView.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
             
@@ -617,13 +621,13 @@
             setTimeout(() => { if (breathChartInstance) { breathChartInstance.destroy(); breathChartInstance = null; } }, 650);
         }
 
-        // --- ВОЗВРАТ К СПИСКУ ---
+        // --- ВОЗВРАТ К СПИСКУ (Плавно) ---
         function showListView(instant = false) {
             const list = document.getElementById('listView');
             const graph = document.getElementById('graphContainer');
             const modal = document.getElementById('modalContent');
             
-            list.style.display = 'flex'; 
+            // Мгновенно показываем прозрачность списка
             list.style.opacity = '1';
             list.style.zIndex = '10';
             
@@ -642,7 +646,6 @@
             const insetLeft = rect.left - parentRect.left - 20;
             const insetRight = parentRect.right - rect.right - 20;
 
-            // ПЛАВНОЕ СЖАТИЕ ГРАФИКА В СТРОКУ
             graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
 
@@ -652,16 +655,13 @@
             }, 650); 
         }
 
-        // --- ОТКРЫТИЕ ГРАФИКА ---
+        // --- ОТКРЫТИЕ ГРАФИКА (Скрываем список, чтобы не просвечивал) ---
         function showGraph(measurement, itemElement) {
             lastClickedItem = itemElement;
             
             const graph = document.getElementById('graphContainer');
             const list = document.getElementById('listView');
             const modal = document.getElementById('modalContent');
-            
-            graph.style.display = 'flex';
-            graph.style.zIndex = '20';
             
             const rect = itemElement.getBoundingClientRect();
             const parentRect = modal.getBoundingClientRect();
@@ -671,21 +671,22 @@
             const insetLeft = rect.left - parentRect.left - 20;
             const insetRight = parentRect.right - rect.right - 20;
 
+            // МГНОВЕННО СКРЫВАЕМ СПИСОК (убирает наслоение текста)
+            list.style.opacity = '0';
+            list.style.pointerEvents = 'none';
+
+            graph.style.display = 'flex';
+            graph.style.zIndex = '999';
+            
             graph.style.transition = 'none';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             
             void graph.offsetWidth;
 
-            // ПЛАВНОЕ РАСШИРЕНИЕ ГРАФИКА ИЗ СТРОКИ
             graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
 
             document.getElementById('graphTitle').innerText = `Замер в ${measurement.time}`;
-            
-            // Скрываем список, когда анимация завершится
-            setTimeout(() => {
-                list.style.display = 'none';
-            }, 650); 
 
             const ctx = document.getElementById('breathChart').getContext('2d');
             let labels = [];
@@ -754,4 +755,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 21 - SMOOTH & CLEAN) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 23 - TRUE FROSTED GLASS) =================== -->
