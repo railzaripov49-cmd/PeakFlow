@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 38 - MOBILE GHOST CLICK KILLER) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 39 - BUG FREE) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -30,11 +30,6 @@
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             margin: 0; padding: 0; overflow: hidden; height: 100vh; box-sizing: border-box;
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
-        }
-
-        /* ЯДЕРНАЯ БЛОКИРОВКА: пока класс locked на body, нихуя не нажимается */
-        body.locked * {
-            pointer-events: none !important;
         }
 
         /* =========================================
@@ -135,13 +130,26 @@
             transition: opacity 0.2s, transform 0.4s var(--ios-spring);
         }
         
-        #fabContainer.expanded .fab-menu-content { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); transition-delay: 0.05s; }
+        /* Когда меню открыто, кнопки кликабельны */
+        #fabContainer.expanded .fab-menu-content { 
+            opacity: 1; 
+            pointer-events: auto; 
+            transform: scale(1) translateY(0); 
+            transition-delay: 0.05s; 
+        }
 
         .fab-action-btn {
             background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 12px; color: white;
             display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-size: 15px; font-weight: 500;
             cursor: pointer; transition: background 0.2s, transform 0.1s; width: 100%;
+            /* Отключаем тач-события по умолчанию, включаем только когда меню открыто */
+            pointer-events: none; 
         }
+        
+        #fabContainer.expanded .fab-action-btn {
+            pointer-events: auto;
+        }
+
         .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
 
         /* =========================================
@@ -272,11 +280,9 @@
         </div>
     </div>
 
-    <!-- Кнопка FAB -->
     <div id="fabContainer" onclick="toggleFab(event)">
         <div class="fab-plus">+</div>
         <div class="fab-menu-content">
-            <!-- Заменили onclick на ontouchstart и onclick для надежности на мобилках -->
             <button class="fab-action-btn" onclick="switchToView('graph', event)">📈 График</button>
             <button class="fab-action-btn" onclick="switchToView('calendar', event)">📅 Календарь</button>
         </div>
@@ -314,18 +320,17 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand(); 
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbxh0Poo3SwCP1-2wyQtV5BfGbxvOTKG012sbCPbNlRe-ay82MaTmHbT1ComA1CXT3Wv_Q/exec";
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbxh0Poo3SwCP1-2wyQtV5BfGbxvOTKG012sbCPbNlRE-ay82MaTmHbT1ComA1CXT3Wv_Q/exec";
 
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth(); 
         let allData = {}; 
         let lastActiveCell = null; 
         let lastClickedItem = null; 
-        let currentView = 'calendar';
         let monthlyChartInstance = null;
         let breathChartInstance = null; 
         
-        // Флаг, чтобы блокировать клики во время анимации
+        // Блокировка во время анимации
         let isAnimating = false; 
 
         function vibrate(type) {
@@ -339,7 +344,7 @@
             if (e.target.id === 'fabContainer' || e.target.classList.contains('fab-plus')) {
                 vibrate('light');
                 const fab = document.getElementById('fabContainer');
-                if (isAnimating) return; // Если идет анимация, не открываем меню
+                if (isAnimating) return;
                 fab.classList.toggle('expanded');
             }
         }
@@ -352,28 +357,28 @@
         });
 
         function switchToView(targetView, e) {
-            if(e) e.stopPropagation(); 
+            if(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             
-            // Если уже идет анимация — игнорируем любые клики
             if (isAnimating) return;
-            
-            vibrate('medium');
             
             const fab = document.getElementById('fabContainer');
             fab.classList.remove('expanded');
 
-            if (currentView === targetView) {
+            const incomingView = targetView === 'graph' ? document.getElementById('graphView') : document.getElementById('calendarView');
+            const outgoingView = targetView === 'graph' ? document.getElementById('calendarView') : document.getElementById('graphView');
+
+            // ПРОВЕРКА: Если экран уже активен, показываем уведомление и выходим
+            if (incomingView.classList.contains('active')) {
                 showToast("Вы уже находитесь здесь");
                 return;
             }
 
-            // ВКЛЮЧАЕМ БЛОКИРОВКУ
             isAnimating = true;
-            document.body.classList.add('locked'); // Блокируем клики на всем экране
-
-            const incomingView = targetView === 'graph' ? document.getElementById('graphView') : document.getElementById('calendarView');
-            const outgoingView = targetView === 'graph' ? document.getElementById('calendarView') : document.getElementById('graphView');
-
+            vibrate('medium');
+            
             const rect = fab.getBoundingClientRect();
 
             incomingView.style.zIndex = '20';
@@ -386,25 +391,22 @@
             outgoingView.style.transition = 'none';
             outgoingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
 
-            incomingView.offsetHeight; 
+            // Принудительная перерисовка
+            void incomingView.offsetHeight; 
 
             setTimeout(() => {
                 incomingView.style.transition = 'clip-path 0.6s var(--ios-spring)';
                 incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
             }, 10);
 
-            currentView = targetView;
             if (targetView === 'graph') renderMonthlyGraph();
 
-            // ВЫКЛЮЧАЕМ БЛОКИРОВКУ ПОСЛЕ ЗАВЕРШЕНИЯ
             setTimeout(() => {
                 incomingView.classList.add('active');
                 outgoingView.classList.remove('active');
                 incomingView.style.zIndex = '10';
                 incomingView.style.transition = '';
-                
-                document.body.classList.remove('locked'); // Разблокируем экран
-                isAnimating = false; // Снимаем флаг
+                isAnimating = false;
             }, 650); 
         }
 
@@ -432,7 +434,8 @@
                     allData[dateKey].push({ time: timeStr, flow: flow, curve: curveString });
                 }
                 renderCalendar();
-                if(currentView === 'graph') renderMonthlyGraph();
+                const isGraphActive = document.getElementById('graphView').classList.contains('active');
+                if(isGraphActive) renderMonthlyGraph();
             } catch (error) {
                 console.error("Ошибка загрузки", error);
             }
@@ -786,4 +789,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 38 - MOBILE GHOST CLICK KILLER) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 39 - BUG FREE) =================== -->
