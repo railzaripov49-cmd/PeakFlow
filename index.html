@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 24 - PERFECT MATH) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 25 - CLEAR GLASS & PERFECT MATH) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -185,19 +185,20 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        /* МОДАЛЬНОЕ ОКНО (МАТОВОЕ СТЕКЛО) */
+        /* МОДАЛЬНОЕ ОКНО (МЕНЬШЕ МАТОВОСТИ) */
         #expandedView { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
-        #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); opacity: 0; transition: opacity 0.4s; }
+        #expandedView::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); opacity: 0; transition: opacity 0.4s; }
         
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
-            background: rgba(30, 30, 30, 0.65);
-            backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
+            
+            /* МЕНЬШЕ МАТОВОСТИ: Прозрачнее фон, меньше размытие */
+            background: rgba(25, 25, 25, 0.45);
+            backdrop-filter: blur(12px) saturate(120%); -webkit-backdrop-filter: blur(12px) saturate(120%);
             border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.3);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             
-            /* Начальный clip-path будет задан через JS */
             clip-path: inset(50% 50% 50% 50% round 16px); 
             transition: clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1);
         }
@@ -232,15 +233,16 @@
             cursor: pointer; flex-shrink: 0; transition: transform 0.2s;
         }
         .measurement-item:active { transform: scale(0.94); }
-        .m-time { color: #aaa; font-size: 14px; }
+        .m-time { color: #ccc; font-size: 14px; }
         .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; }
 
         /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА */
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
             
-            background: rgba(20, 20, 20, 0.85) !important;
-            backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%);
+            /* МЕНЬШЕ МАТОВОСТИ */
+            background: rgba(15, 15, 15, 0.6) !important;
+            backdrop-filter: blur(15px) saturate(120%); -webkit-backdrop-filter: blur(15px) saturate(120%);
             
             border-radius: 16px;
             padding: 10px;
@@ -554,7 +556,7 @@
             });
         }
 
-        // --- ОТКРЫТИЕ МОДАЛКИ (Правильный сброс анимации) ---
+        // --- ОТКРЫТИЕ МОДАЛКИ (ИСПРАВЛЕНО) ---
         function openExpandedView(cell, day, measurements) {
             vibrate('medium');
             lastActiveCell = cell;
@@ -565,17 +567,14 @@
             
             const modalRect = modal.getBoundingClientRect();
             
-            // Считаем отступы относительно самой модалки
             const insetTop = rect.top - modalRect.top;
             const insetBottom = modalRect.bottom - rect.bottom;
             const insetLeft = rect.left - modalRect.left;
             const insetRight = modalRect.right - rect.right;
             
-            // 1. Мгновенно ставим окно в координаты ячейки (отключаем анимацию)
             modal.style.transition = 'none';
             modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             
-            // Заполняем данными
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
             
@@ -600,10 +599,8 @@
 
             showListView(true); 
 
-            // 2. Форсируем перерисовку кадра
             void modal.offsetWidth;
 
-            // 3. Включаем анимацию и расширяем на весь экран
             modal.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
             
@@ -636,11 +633,13 @@
             }, 650);
         }
 
-        // --- ВОЗВРАТ К СПИСКУ ---
+        // --- ВОЗВРАТ К СПИСКУ (ИСПРАВЛЕНО) ---
         function showListView(instant = false) {
             const list = document.getElementById('listView');
             const graph = document.getElementById('graphContainer');
+            const wrapper = document.getElementById('innerViewsWrapper'); // Берем контейнер
             
+            list.style.display = 'flex';
             list.style.opacity = '1';
             list.style.zIndex = '10';
             
@@ -653,12 +652,12 @@
             }
 
             const itemRect = lastClickedItem.getBoundingClientRect();
-            const graphRect = graph.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
 
-            const insetTop = itemRect.top - graphRect.top;
-            const insetBottom = graphRect.bottom - itemRect.bottom;
-            const insetLeft = itemRect.left - graphRect.left;
-            const insetRight = graphRect.right - itemRect.right;
+            const insetTop = itemRect.top - wrapperRect.top;
+            const insetBottom = wrapperRect.bottom - itemRect.bottom;
+            const insetLeft = itemRect.left - wrapperRect.left;
+            const insetRight = wrapperRect.right - itemRect.right;
 
             graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
@@ -669,39 +668,35 @@
             }, 650); 
         }
 
-        // --- ОТКРЫТИЕ ГРАФИКА ---
+        // --- ОТКРЫТИЕ ГРАФИКА (ИСПРАВЛЕНО) ---
         function showGraph(measurement, itemElement) {
             lastClickedItem = itemElement;
             
             const graph = document.getElementById('graphContainer');
             const list = document.getElementById('listView');
+            const wrapper = document.getElementById('innerViewsWrapper'); // Берем контейнер
             
-            // Мгновенно убираем список
             list.style.opacity = '0';
             list.style.pointerEvents = 'none';
             
-            // Берем точные координаты строки внутри графика
-            const itemRect = itemElement.getBoundingClientRect();
-            const graphRect = graph.getBoundingClientRect();
-
-            const insetTop = itemRect.top - graphRect.top;
-            const insetBottom = graphRect.bottom - itemRect.bottom;
-            const insetLeft = itemRect.left - graphRect.left;
-            const insetRight = graphRect.right - itemRect.right;
-
             graph.style.display = 'flex';
             graph.style.zIndex = '999';
             
-            // 1. Мгновенно ставим в размер строки
+            const itemRect = itemElement.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+
+            const insetTop = itemRect.top - wrapperRect.top;
+            const insetBottom = wrapperRect.bottom - itemRect.bottom;
+            const insetLeft = itemRect.left - wrapperRect.left;
+            const insetRight = wrapperRect.right - itemRect.right;
+
             graph.style.transition = 'none';
             graph.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
             
             document.getElementById('graphTitle').innerText = `Замер в ${measurement.time}`;
             
-            // 2. Форсируем перерисовку
             void graph.offsetWidth;
 
-            // 3. Запускаем анимацию расширения
             graph.style.transition = 'clip-path 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
             graph.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
 
@@ -772,4 +767,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 24 - PERFECT MATH) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 25 - CLEAR GLASS & PERFECT MATH) =================== -->
