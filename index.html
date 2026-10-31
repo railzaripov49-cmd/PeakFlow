@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 30 - RANDOM ORBS) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 32 - OVERLAP TRANSITION) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -40,7 +40,7 @@
             z-index: 10;
         }
 
-        /* СФЕРЫ НА ФОНЕ (Цвет задается через JS) */
+        /* СФЕРЫ НА ФОНЕ */
         .bg-orb { position: absolute; border-radius: 50%; filter: blur(50px); z-index: 0; opacity: 0.6; pointer-events: none; }
         .orb-1 { width: 250px; height: 250px; top: 20%; left: 20%; animation: orbit1 15s infinite linear; }
         .orb-2 { width: 200px; height: 200px; top: 50%; left: 50%; animation: orbit2 20s infinite linear reverse; }
@@ -132,7 +132,7 @@
         #fabContainer.expanded {
             width: 110px; height: 100px;
             border-radius: 20px;
-            background: rgba(20, 20, 20, 0.2); 
+            background: rgba(20, 20, 20, 0.4); 
             backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%);
             border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: default;
@@ -160,12 +160,22 @@
             transition-delay: 0.1s;
         }
 
+        /* СТИЛЬ КНОПОК ВНУТРИ МЕНЮ */
         .fab-action-btn {
-            background: rgba(255,255,255,0.1); border: none; padding: 6px 10px; border-radius: 10px; color: white;
-            display: flex; justify-content: flex-start; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
-            cursor: pointer; transition: background 0.2s;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.4); 
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 12px; border-radius: 12px; color: white;
+            display: flex; justify-content: flex-start; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.3);
         }
-        .fab-action-btn:active { background: rgba(255,255,255,0.25); }
+        .fab-action-btn:active { 
+            transform: scale(0.92); 
+            background: rgba(77, 166, 255, 0.3);
+            box-shadow: 0 0 15px rgba(77, 166, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
 
         /* ГРАФИК ЗА МЕСЯЦ */
         .chart-container { 
@@ -186,7 +196,7 @@
         #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
         /* ==========================================
-           ФИКС ПЕРЕКРАШИВАНИЯ (МОДАЛКА)
+           МОДАЛЬНОЕ ОКНО (В СТИЛЕ LIQUID GLASS)
            ========================================== */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
@@ -194,7 +204,6 @@
             transition: opacity 0.4s; 
         }
         
-        /* УБРАЛИ ЗАТЕМНЕНИЕ, ОСТАВИЛИ ТОЛЬКО РАЗМЫТИЕ */
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: transparent; 
@@ -205,10 +214,12 @@
         #modalContent {
             position: absolute; top: 10vh; bottom: 10vh; left: 20px; right: 20px;
             
-            /* ТУТ БОЛЬШЕ НЕТ BACKDROP-FILTER. Только полупрозрачный фон. */
-            background: rgba(25, 25, 25, 0.85);
-            border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.3);
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.7) 0%, rgba(20, 20, 20, 0.5) 100%);
+            border-radius: 24px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.2);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             
             clip-path: inset(50% 50% 50% 50% round 16px); 
@@ -227,7 +238,7 @@
 
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; z-index: 100; }
         .expanded-title { font-size: 22px; font-weight: bold; }
-        .close-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .close-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; border-top: 1px solid rgba(255,255,255,0.3); }
 
         /* Контейнер для переключения списка и графика */
         #innerViewsWrapper { position: relative; flex: 1; min-height: 0; overflow: hidden; border-radius: 16px; }
@@ -243,25 +254,42 @@
         }
         #measurementList::-webkit-scrollbar { display: none; }
         
+        /* СТИЛЬ СТРОК (КАК ЯЧЕЙКИ КАЛЕНДАРЯ) */
         .measurement-item { 
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%); 
-            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.3); 
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.4); 
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
             padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; flex-shrink: 0; transition: transform 0.2s;
+            cursor: pointer; flex-shrink: 0; transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.3);
+            position: relative; overflow: hidden;
         }
-        .measurement-item:active { transform: scale(0.94); }
-        .m-time { color: #ccc; font-size: 14px; }
-        .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; }
+
+        .measurement-item::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%); pointer-events: none; border-radius: inherit;
+        }
+        
+        .measurement-item:active { 
+            transform: scale(0.94); 
+            background: rgba(77, 166, 255, 0.3);
+            box-shadow: 0 0 15px rgba(77, 166, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .m-time { color: #ccc; font-size: 14px; z-index: 1; }
+        .m-value { color: #ff4d4d; font-size: 18px; font-weight: bold; z-index: 1; }
 
         /* ДЕТАЛЬНЫЙ ГРАФИК ВНУТРИ ОКНА */
         #graphContainer { 
             position: absolute; inset: 0; display: none; flex-direction: column; z-index: 999; 
             
-            background: rgba(20, 20, 20, 0.98);
+            background: rgba(20, 20, 20, 0.95);
             border-radius: 16px;
             padding: 10px;
             box-sizing: border-box;
             border: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.3);
             
             clip-path: inset(50% 50% 50% 50% round 16px); 
             will-change: clip-path;
@@ -271,6 +299,7 @@
             background: rgba(255,255,255,0.1); border: none; color: #4da6ff;
             font-size: 14px; padding: 8px 15px; border-radius: 10px;
             margin-bottom: 15px; cursor: pointer; align-self: flex-start; flex-shrink: 0;
+            border-top: 1px solid rgba(255,255,255,0.3);
         }
         .chart-wrapper { flex: 1; position: relative; width: 100%; height: 100%; min-height: 0; }
     </style>
@@ -279,7 +308,6 @@
 
     <div id="appWrapper">
         <div id="calendarView" class="view active">
-            <!-- Цвет сфер задается в JS -->
             <div class="bg-orb orb-1"></div>
             <div class="bg-orb orb-2"></div>
             <div class="header">
@@ -358,13 +386,9 @@
         let monthlyChartInstance = null;
         let breathChartInstance = null; 
 
-        // --- ГЕНЕРАЦИЯ СЛУЧАЙНОГО ЦВЕТА ДЛЯ СФЕР ---
         document.addEventListener("DOMContentLoaded", () => {
-            // Генерируем случайный оттенок (0-360)
             const randomHue = Math.floor(Math.random() * 360);
-            // Одинаковый цвет для обеих сфер
             const orbColor = `hsl(${randomHue}, 100%, 60%)`; 
-            
             document.querySelectorAll('.bg-orb').forEach(orb => {
                 orb.style.background = orbColor;
             });
@@ -392,6 +416,7 @@
             }
         });
 
+        // --- ПЕРЕХОД МЕЖДУ КАЛЕНДАРЕМ И ГРАФИКОМ (ПЕРЕКРЫТИЕ) ---
         function switchToView(targetView, e) {
             if(e) e.stopPropagation(); 
             vibrate('medium');
@@ -409,35 +434,35 @@
 
             const rect = fab.getBoundingClientRect();
 
-            incomingView.style.zIndex = '10';
-            outgoingView.style.zIndex = '20';
+            // Поднимаем новый экран ПОВЕРХ старого
+            incomingView.style.zIndex = '20';
+            outgoingView.style.zIndex = '10';
 
             incomingView.style.opacity = '1';
             incomingView.style.transition = 'none';
             incomingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
             
+            // НЕ анимируем старый экран, он просто останется на месте
             outgoingView.style.transition = 'none';
             outgoingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
 
+            incomingView.offsetHeight; // Force reflow
+
+            // Запускаем расширение ТОЛЬКО нового экрана
             setTimeout(() => {
                 incomingView.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
                 incomingView.style.clipPath = `inset(0px 0px 0px 0px round 0px)`;
-                
-                outgoingView.style.transition = 'clip-path 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
-                outgoingView.style.clipPath = `inset(${rect.top}px ${window.innerWidth - rect.right}px ${window.innerHeight - rect.bottom}px ${rect.left}px round 20px)`;
             }, 50);
 
             currentView = targetView;
             if (targetView === 'graph') renderMonthlyGraph();
 
+            // Очистка после завершения анимации
             setTimeout(() => {
                 incomingView.classList.add('active');
                 outgoingView.classList.remove('active');
-                outgoingView.style.zIndex = '1';
                 incomingView.style.zIndex = '10';
                 incomingView.style.transition = '';
-                outgoingView.style.transition = '';
-                outgoingView.style.clipPath = '';
             }, 850); 
         }
 
@@ -584,7 +609,6 @@
             });
         }
 
-        // --- ОТКРЫТИЕ МОДАЛКИ ---
         function openExpandedView(cell, day, measurements) {
             vibrate('medium');
             lastActiveCell = cell;
@@ -803,4 +827,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 30 - RANDOM ORBS) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 32 - OVERLAP TRANSITION) =================== -->
