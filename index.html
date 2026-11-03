@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 7.0 - IOS NATIVE DESIGN) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 7.1 - iOS Design & Fixed Scales) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -282,7 +282,6 @@
         let breathChartInstance = null; 
         let currentView = 'calendar';
 
-        // Плавная анимация ядра
         const core = document.getElementById('core');
         setInterval(() => {
             const scale = 0.9 + Math.random() * 0.2;
@@ -429,9 +428,9 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Утро',
+                            label: 'Утро (до 12)',
                             data: morningData,
-                            borderColor: '#30D158', // iOS Green
+                            borderColor: '#30D158',
                             backgroundColor: 'rgba(48, 209, 88, 0.1)',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
@@ -441,9 +440,9 @@
                             fill: false
                         },
                         {
-                            label: 'День/Вечер',
+                            label: 'День/Вечер (после 12)',
                             data: eveningData,
-                            borderColor: '#0A84FF', // iOS Blue
+                            borderColor: '#0A84FF',
                             backgroundColor: 'rgba(10, 132, 255, 0.1)',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
@@ -457,11 +456,28 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { 
-                        legend: { display: true, labels: { color: '#8E8E93', font: { family: '-apple-system' } } } 
+                        legend: { display: true, labels: { color: '#8E8E93' } } 
                     },
                     scales: {
-                        x: { ticks: { color: '#8E8E93' }, grid: { display: false } },
-                        y: { ticks: { color: '#8E8E93' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+                        x: { 
+                            ticks: { 
+                                color: '#8E8E93', 
+                                stepSize: 1, 
+                                autoSkip: false, 
+                                maxRotation: 90, 
+                                minRotation: 90
+                            }, 
+                            grid: { display: false } 
+                        },
+                        y: { 
+                            min: 0, 
+                            max: 1000, 
+                            ticks: { 
+                                color: '#8E8E93', 
+                                stepSize: 50
+                            }, 
+                            grid: { color: 'rgba(255,255,255,0.05)' } 
+                        }
                     }
                 }
             });
@@ -564,4 +580,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 7.0) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 7.1) =================== -->
