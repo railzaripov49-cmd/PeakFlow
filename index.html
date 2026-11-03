@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 10.0 - LIQUID GLASS & CLEAN LIST) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 11.0 - LIQUID GLASS & MORPHING) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -10,7 +10,7 @@
     
     <style>
         /* =========================================
-           ГЛОБАЛЬНЫЕ СТИЛИ И LIQUID GLASS
+           ГЛОБАЛЬНЫЕ СТИЛИ И ЦВЕТА
            ========================================= */
         :root {
             --bg: #050505;
@@ -22,6 +22,8 @@
             --glass: rgba(30, 30, 30, 0.65);
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-highlight: rgba(255, 255, 255, 0.25);
+            
+            /* Кривая пружины для анимаций (iOS Spring) */
             --spring: cubic-bezier(0.32, 0.72, 0, 1);
         }
 
@@ -42,12 +44,20 @@
         }
 
         /* =========================================
-           КАЛЕНДАРЬ
+           ЭКРАНЫ (КАЛЕНДАРЬ И ГРАФИК)
            ========================================= */
+        .view { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; 
+            padding: 20px; box-sizing: border-box; z-index: 1;
+        }
+        .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
+
+        /* Шапка */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
-            position: relative; z-index: 1; flex-shrink: 0;
+            flex-shrink: 0;
         }
         .header button { 
             background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -59,16 +69,17 @@
         }
         .header button:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
 
+        /* Календарь */
         .weekdays { 
             display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
             font-weight: 500; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px; 
-            position: relative; z-index: 1; flex-shrink: 0;
+            flex-shrink: 0;
         }
         .weekends { color: var(--red); }
         
         .calendar { 
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; 
-            position: relative; z-index: 1; align-content: start; 
+            align-content: start; 
         }
 
         /* Ячейки календаря (Liquid Glass) */
@@ -103,7 +114,7 @@
         .empty-cell:active { transform: none; background: transparent; }
 
         /* =========================================
-           FAB МЕНЮ
+           FAB МЕНЮ (МОРФИНГ)
            ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
@@ -115,6 +126,7 @@
             box-shadow: 0 8px 30px rgba(0,0,0,0.4);
             border-radius: 28px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
+            /* Пружинная анимация расширения */
             transition: width 0.4s var(--spring), height 0.4s var(--spring), border-radius 0.4s var(--spring);
             z-index: 500; overflow: hidden; cursor: pointer;
         }
@@ -150,14 +162,15 @@
         .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
 
         /* =========================================
-           МОДАЛЬНОЕ ОКНО (LIQUID GLASS)
+           МОДАЛЬНОЕ ОКНО (МОРФИНГ ИЗ ЯЧЕЙКИ)
            ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
             pointer-events: none; opacity: 0; transition: opacity 0.3s; 
             display: flex; justify-content: center; align-items: center;
         }
-        /* Задний фон затемняется и размывается */
+        
+        /* Подложка затемняется и размывается */
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0, 0, 0, 0.4); 
@@ -166,9 +179,10 @@
         }
         
         #modalContent {
-            position: relative; width: 90%; max-width: 400px; height: 70vh;
+            position: absolute;
+            top: 10vh; bottom: 10vh; left: 20px; right: 20px;
             
-            /* Сам эффект матового стекла */
+            /* Само стекло */
             background: var(--glass);
             backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
             border-radius: 24px; 
@@ -177,15 +191,19 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
             
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
-            transform: scale(0.95); transition: transform 0.3s var(--spring);
+            
+            /* Начальное состояние (сжато в точку, координаты задаст JS) */
+            clip-path: inset(50% 50% 50% 50% round 16px); 
+            transition: clip-path 0.6s var(--spring);
+            will-change: clip-path;
+            transform: translateZ(0); /* Аппаратное ускорение */
         }
         
         #expandedView.active { pointer-events: auto; opacity: 1; }
         #expandedView.active::before { opacity: 1; }
-        #expandedView.active #modalContent { transform: scale(1); }
         
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
-        .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
         .close-btn { 
             background: rgba(255,255,255,0.1); border: none; color: var(--text); 
             font-size: 18px; width: 30px; height: 30px; border-radius: 50%; 
@@ -200,7 +218,7 @@
         }
         #measurementList::-webkit-scrollbar { display: none; }
         
-        /* Строки в списке тоже стеклянные */
+        /* Строки в списке */
         .measurement-item { 
             background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
             border: 1px solid rgba(255, 255, 255, 0.05); 
@@ -211,12 +229,7 @@
         .m-time { color: var(--text-secondary); font-size: 15px; font-weight: 500; }
         .m-value { font-size: 17px; font-weight: 600; }
 
-        /* =========================================
-           ЭКРАНЫ И ГРАФИК
-           ========================================= */
-        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 20px; box-sizing: border-box; }
-        .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
-
+        /* Месячный график */
         .chart-container { 
             flex: 1; position: relative; width: 100%; height: 100%; 
             background: rgba(28, 28, 30, 0.6); border-radius: 20px; padding: 15px; 
@@ -261,7 +274,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА (ТОЛЬКО СПИСОК) -->
+    <!-- МОДАЛКА (СПИСОК) -->
     <div id="expandedView" onclick="closeExpandedView()">
         <div id="modalContent" onclick="event.stopPropagation()">
             <div class="expanded-header">
@@ -380,7 +393,7 @@
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
                 }
                 
-                cell.addEventListener('click', function() { openModal(day, measurements); });
+                cell.addEventListener('click', function() { openModal(this, day, measurements); });
                 grid.appendChild(cell);
             }
         }
@@ -452,7 +465,8 @@
             });
         }
 
-        function openModal(day, measurements) {
+        // --- АНИМАЦИЯ МОРФИНГА (УВЕЛИЧЕНИЕ ИЗ ЯЧЕЙКИ) ---
+        function openModal(cell, day, measurements) {
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
             
@@ -472,11 +486,36 @@
                 });
             }
 
-            document.getElementById('expandedView').classList.add('active');
+            const rect = cell.getBoundingClientRect();
+            const modal = document.getElementById('modalContent');
+            const view = document.getElementById('expandedView');
+            
+            // Вычисляем стартовые координаты (где находится ячейка)
+            const modalRect = modal.getBoundingClientRect();
+            const insetTop = rect.top - modalRect.top;
+            const insetBottom = modalRect.bottom - rect.bottom;
+            const insetLeft = rect.left - modalRect.left;
+            const insetRight = modalRect.right - rect.right;
+            
+            // 1. Мгновенно ставим окно в размер ячейки (без анимации)
+            modal.style.transition = 'none';
+            modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+            
+            view.classList.add('active');
+            
+            // 2. Форсируем перерисовку кадра
+            void modal.offsetHeight;
+            
+            // 3. Включаем пружинную анимацию и растягиваем на весь экран
+            setTimeout(() => {
+                modal.style.transition = 'clip-path 0.6s var(--spring)';
+                modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
+            }, 10);
         }
 
         function closeExpandedView() {
-            document.getElementById('expandedView').classList.remove('active');
+            const view = document.getElementById('expandedView');
+            view.classList.remove('active');
         }
 
         document.getElementById('prevBtn').addEventListener('click', () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); });
@@ -488,4 +527,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 10.0) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 11.0) =================== -->
