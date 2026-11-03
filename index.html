@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 12.0 - CLEAN PRESS EFFECT) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.0 - TRUE MORPHING) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,9 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     
     <style>
-        /* =========================================
-           ГЛОБАЛЬНЫЕ СТИЛИ И ЦВЕТА
-           ========================================= */
         :root {
             --bg: #050505;
             --text: #ffffff;
@@ -19,9 +16,10 @@
             --blue: #0A84FF;
             --green: #30D158;
             --red: #FF453A;
-            --glass: rgba(30, 30, 30, 0.65);
+            --glass: rgba(30, 30, 30, 0.7);
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-highlight: rgba(255, 255, 255, 0.25);
+            /* Кривая пружины как в iOS */
             --spring: cubic-bezier(0.32, 0.72, 0, 1);
         }
 
@@ -74,7 +72,6 @@
             align-content: start; 
         }
 
-        /* ЭФФЕКТ НАЖАТИЯ НА ЯЧЕЙКУ */
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
             border-radius: 16px; position: relative; cursor: pointer;
@@ -86,14 +83,9 @@
             border-left: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1);
             
-            /* Анимация нажатия */
-            transition: transform 0.2s var(--spring), background 0.2s;
+            transition: transform 0.15s var(--spring), background 0.2s;
         }
-        .day-cell:active { 
-            transform: scale(1.15); /* Ячейка увеличивается при нажатии */
-            background: rgba(255,255,255,0.25); 
-            z-index: 5;
-        }
+        .day-cell:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
         
         .day-cell.today { 
             background: rgba(10, 132, 255, 0.3); 
@@ -111,9 +103,7 @@
         .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; }
         .empty-cell:active { transform: none; background: transparent; }
 
-        /* =========================================
-           FAB МЕНЮ (МОРФИНГ)
-           ========================================= */
+        /* FAB МЕНЮ */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
             width: 56px; height: 56px;
@@ -159,23 +149,25 @@
         .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
 
         /* =========================================
-           МОДАЛЬНОЕ ОКНО
+           МОДАЛЬНОЕ ОКНО (МОРФИНГ)
            ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
             pointer-events: none; opacity: 0; transition: opacity 0.3s; 
-            display: flex; justify-content: center; align-items: center;
         }
         
+        /* Затемнение фона */
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.4); 
+            background: rgba(0, 0, 0, 0.5); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
             opacity: 0; transition: opacity 0.3s; 
         }
         
         #modalContent {
-            position: relative; width: 90%; max-width: 400px; height: 70vh;
+            position: absolute;
+            /* Окно будет позиционироваться в этих пределах */
+            top: 10vh; bottom: 10vh; left: 20px; right: 20px;
             
             background: var(--glass);
             backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
@@ -186,14 +178,15 @@
             
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             
-            /* Анимация появления (пружина) */
-            transform: scale(0.9);
-            transition: transform 0.3s var(--spring);
+            /* Начальное состояние (задается через JS перед анимацией) */
+            clip-path: inset(50% 50% 50% 50% round 16px); 
+            transition: clip-path 0.7s var(--spring);
+            will-change: clip-path;
+            transform: translateZ(0); /* Аппаратное ускорение */
         }
         
         #expandedView.active { pointer-events: auto; opacity: 1; }
         #expandedView.active::before { opacity: 1; }
-        #expandedView.active #modalContent { transform: scale(1); }
         
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
         .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
@@ -205,6 +198,18 @@
         }
         .close-btn:active { background: rgba(255,255,255,0.2); }
         
+        /* Содержимое окна (появляется с задержкой) */
+        #modalInner {
+            display: flex; flex-direction: column; height: 100%; min-height: 0;
+            opacity: 0; transform: scale(0.95);
+            transition: opacity 0.3s ease, transform 0.4s var(--spring);
+        }
+        
+        #expandedView.active #modalInner {
+            opacity: 1; transform: scale(1);
+            transition-delay: 0.15s; /* Текст проявляется, когда окно уже наполовину раскрылось */
+        }
+
         #measurementList { 
             flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; 
             -webkit-overflow-scrolling: touch; scrollbar-width: none; 
@@ -268,11 +273,16 @@
     <!-- МОДАЛКА -->
     <div id="expandedView" onclick="closeExpandedView()">
         <div id="modalContent" onclick="event.stopPropagation()">
-            <div class="expanded-header">
-                <div class="expanded-title" id="sheetDateTitle">Дата</div>
-                <button class="close-btn" onclick="closeExpandedView()">×</button>
+            
+            <!-- Обертка для контента, чтобы он проявлялся плавно -->
+            <div id="modalInner">
+                <div class="expanded-header">
+                    <div class="expanded-title" id="sheetDateTitle">Дата</div>
+                    <button class="close-btn" onclick="closeExpandedView()">×</button>
+                </div>
+                <div id="measurementList"></div>
             </div>
-            <div id="measurementList"></div>
+
         </div>
     </div>
 
@@ -384,7 +394,8 @@
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
                 }
                 
-                cell.addEventListener('click', function() { openModal(day, measurements); });
+                // Передаем саму ячейку в функцию открытия
+                cell.addEventListener('click', function() { openModal(this, day, measurements); });
                 grid.appendChild(cell);
             }
         }
@@ -456,7 +467,8 @@
             });
         }
 
-        function openModal(day, measurements) {
+        // --- АНИМАЦИЯ МОРФИНГА ---
+        function openModal(cellElement, day, measurements) {
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
             
@@ -476,11 +488,39 @@
                 });
             }
 
-            document.getElementById('expandedView').classList.add('active');
+            const rect = cellElement.getBoundingClientRect();
+            const modal = document.getElementById('modalContent');
+            const view = document.getElementById('expandedView');
+            
+            // Координаты модалки (она по центру)
+            const modalRect = modal.getBoundingClientRect();
+            
+            // Вычисляем отступы для начального состояния (ровно в размер ячейки)
+            const insetTop = rect.top - modalRect.top;
+            const insetBottom = modalRect.bottom - rect.bottom;
+            const insetLeft = rect.left - modalRect.left;
+            const insetRight = modalRect.right - rect.right;
+            
+            // 1. Мгновенно перемещаем окно в границы ячейки (отключаем transition)
+            modal.style.transition = 'none';
+            modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+            
+            // Показываем окно и фон
+            view.classList.add('active');
+            
+            // 2. Форсируем перерисовку (чтобы браузер зафиксировал сжатое состояние)
+            modal.offsetHeight; 
+            
+            // 3. Запускаем пружинную анимацию расширения до полного размера
+            setTimeout(() => {
+                modal.style.transition = 'clip-path 0.7s var(--spring)';
+                modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
+            }, 10);
         }
 
         function closeExpandedView() {
-            document.getElementById('expandedView').classList.remove('active');
+            const view = document.getElementById('expandedView');
+            view.classList.remove('active');
         }
 
         document.getElementById('prevBtn').addEventListener('click', () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); });
@@ -492,4 +532,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 12.0) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.0) =================== -->
