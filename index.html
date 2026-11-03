@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 9.0 - PURE IOS) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 10.0 - LIQUID GLASS & CLEAN LIST) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -10,80 +10,87 @@
     
     <style>
         /* =========================================
-           iOS СИСТЕМНЫЕ ЦВЕТА (DARK MODE)
+           ГЛОБАЛЬНЫЕ СТИЛИ И LIQUID GLASS
            ========================================= */
         :root {
-            --bg: #000000;
-            --card: #1C1C1E;
-            --text: #FFFFFF;
+            --bg: #050505;
+            --text: #ffffff;
             --text-secondary: #8E8E93;
             --blue: #0A84FF;
             --green: #30D158;
             --red: #FF453A;
-            --glass: rgba(28, 28, 30, 0.8);
-            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(30, 30, 30, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-highlight: rgba(255, 255, 255, 0.25);
             --spring: cubic-bezier(0.32, 0.72, 0, 1);
         }
 
         body { 
-            background-color: var(--bg); 
-            color: var(--text); 
+            background-color: var(--bg); color: var(--text); 
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; 
             margin: 0; padding: 20px; overflow: hidden; height: 100vh; box-sizing: border-box;
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
         }
 
-        /* Ядро на фоне */
+        /* --- ЯДРО (ФОН) --- */
         #core {
-            position: fixed; top: 50%; left: 50%; width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(10, 132, 255, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+            position: fixed; top: 50%; left: 50%; width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
             border-radius: 50%; transform: translate(-50%, -50%) scale(1);
             z-index: 0; pointer-events: none;
-            transition: transform 2s ease-in-out, opacity 2s ease-in-out;
+            transition: transform 1.5s ease-in-out, opacity 1.5s ease-in-out;
         }
 
-        /* Экраны */
-        .view { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            opacity: 0; pointer-events: none; transition: opacity 0.3s; 
-            padding: 20px; box-sizing: border-box; z-index: 1;
-        }
-        .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
-
-        /* Шапка */
+        /* =========================================
+           КАЛЕНДАРЬ
+           ========================================= */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
-            flex-shrink: 0;
+            position: relative; z-index: 1; flex-shrink: 0;
         }
         .header button { 
-            background: rgba(255,255,255,0.1); border: none; color: var(--text); 
-            font-size: 18px; width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--text); font-size: 18px; width: 40px; height: 40px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            transition: background 0.2s;
+            cursor: pointer; transition: background 0.2s, transform 0.1s;
         }
-        .header button:active { background: rgba(255,255,255,0.2); }
+        .header button:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
 
-        /* Календарь */
         .weekdays { 
             display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
             font-weight: 500; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px; 
+            position: relative; z-index: 1; flex-shrink: 0;
         }
         .weekends { color: var(--red); }
         
         .calendar { 
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; 
-            align-content: start; 
+            position: relative; z-index: 1; align-content: start; 
         }
 
+        /* Ячейки календаря (Liquid Glass) */
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            border-radius: 18px; position: relative; cursor: pointer;
-            background: var(--card); border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px; position: relative; cursor: pointer;
+            
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1);
+            
             transition: transform 0.1s var(--spring), background 0.2s;
         }
-        .day-cell:active { transform: scale(0.9); background: #2C2C2E; }
-        .day-cell.today { background: var(--blue); border-color: var(--blue); }
+        .day-cell:active { transform: scale(0.9); background: rgba(255,255,255,0.15); }
+        .day-cell.today { 
+            background: rgba(10, 132, 255, 0.3); 
+            border-top: 1px solid rgba(10, 132, 255, 0.5);
+            border-left: 1px solid rgba(10, 132, 255, 0.3);
+        }
         
         .day-num { font-size: 17px; font-weight: 500; color: var(--text); }
         .day-val { font-size: 10px; font-weight: 600; position: absolute; bottom: 5px; }
@@ -92,16 +99,19 @@
         .val-blue { color: var(--blue); }
         .day-cell.today .day-val { color: rgba(255,255,255,0.9); }
 
-        .empty-cell { background: transparent; border: none; cursor: default; }
+        .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; }
         .empty-cell:active { transform: none; background: transparent; }
 
-        /* FAB Меню */
+        /* =========================================
+           FAB МЕНЮ
+           ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
             width: 56px; height: 56px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 30px rgba(0,0,0,0.4);
             border-radius: 28px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -111,7 +121,7 @@
         
         #fabContainer.expanded {
             width: 120px; height: 110px; border-radius: 24px;
-            background: rgba(30, 30, 30, 0.9);
+            background: rgba(30, 30, 30, 0.85);
             cursor: default;
         }
 
@@ -135,28 +145,37 @@
         .fab-action-btn {
             background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 12px; color: white;
             display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500;
-            transition: background 0.2s, transform 0.1s; width: 100%;
+            cursor: pointer; transition: background 0.2s, transform 0.1s; width: 100%;
         }
         .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
 
-        /* Модалка (Список) */
+        /* =========================================
+           МОДАЛЬНОЕ ОКНО (LIQUID GLASS)
+           ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
             pointer-events: none; opacity: 0; transition: opacity 0.3s; 
             display: flex; justify-content: center; align-items: center;
         }
+        /* Задний фон затемняется и размывается */
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+            background: rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
             opacity: 0; transition: opacity 0.3s; 
         }
         
         #modalContent {
             position: relative; width: 90%; max-width: 400px; height: 70vh;
+            
+            /* Сам эффект матового стекла */
             background: var(--glass);
-            border-radius: 24px; border: 1px solid var(--border);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border-radius: 24px; 
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid var(--glass-highlight);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+            
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             transform: scale(0.95); transition: transform 0.3s var(--spring);
         }
@@ -166,11 +185,12 @@
         #expandedView.active #modalContent { transform: scale(1); }
         
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
-        .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+        .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         .close-btn { 
             background: rgba(255,255,255,0.1); border: none; color: var(--text); 
             font-size: 18px; width: 30px; height: 30px; border-radius: 50%; 
-            display: flex; justify-content: center; align-items: center; transition: background 0.2s;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;
+            border-top: 1px solid rgba(255,255,255,0.2);
         }
         .close-btn:active { background: rgba(255,255,255,0.2); }
         
@@ -180,19 +200,27 @@
         }
         #measurementList::-webkit-scrollbar { display: none; }
         
+        /* Строки в списке тоже стеклянные */
         .measurement-item { 
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255, 255, 255, 0.05); 
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
             padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-            flex-shrink: 0; 
+            flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .m-time { color: var(--text-secondary); font-size: 15px; font-weight: 500; }
         .m-value { font-size: 17px; font-weight: 600; }
 
-        /* Месячный график */
+        /* =========================================
+           ЭКРАНЫ И ГРАФИК
+           ========================================= */
+        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 20px; box-sizing: border-box; }
+        .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
+
         .chart-container { 
             flex: 1; position: relative; width: 100%; height: 100%; 
-            background: var(--card); border-radius: 20px; padding: 15px; 
-            box-sizing: border-box; 
+            background: rgba(28, 28, 30, 0.6); border-radius: 20px; padding: 15px; 
+            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05);
         }
     </style>
 </head>
@@ -255,7 +283,6 @@
         let monthlyChartInstance = null;
         let currentView = 'calendar';
 
-        // Плавная пульсация ядра
         const core = document.getElementById('core');
         setInterval(() => {
             const scale = 0.9 + Math.random() * 0.15;
@@ -461,4 +488,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 9.0) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 10.0) =================== -->
