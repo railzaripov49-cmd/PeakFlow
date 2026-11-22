@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 14.9 - TRUE IN-PLACE CELL MORPH LIKE FAB) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.0 - IDENTICAL DESIGN + MAX RUNTIME & GPU OPTIMIZATION) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -35,6 +35,7 @@
         .liquid-blob {
             position: absolute; border-radius: 50%;
             will-change: transform;
+            backface-visibility: hidden;
         }
         .blob-1 {
             top: -4%; left: -10%; width: 460px; height: 460px;
@@ -74,6 +75,7 @@
             transition: opacity 0.3s var(--spring), transform 0.5s var(--spring), border-radius 0.48s var(--spring); 
             padding: 20px; box-sizing: border-box; z-index: 1;
             will-change: opacity, transform;
+            contain: layout style;
         }
         .view.active { 
             opacity: 1; pointer-events: auto; z-index: 10; 
@@ -142,9 +144,6 @@
             100% { opacity: 1; transform: scale(1); border-radius: 20px; }
         }
 
-        /* =========================================
-           ЯЧЕЙКА КАЛЕНДАРЯ (САМА РАЗДУВАЕТСЯ КАК КНОПКА +)
-           ========================================= */
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
             border-radius: 20px; position: relative; cursor: pointer; overflow: hidden;
@@ -204,18 +203,15 @@
         .val-blue { color: #64D2FF; }
         .day-cell.today .day-val { color: #ffffff; }
 
-        .empty-cell { background: transparent; box-shadow: none; cursor: default; animation: none; }
+        .empty-cell { background: transparent; box-shadow: none; cursor: default; animation: none; pointer-events: none; }
         .empty-cell::before { display: none; }
-        .empty-cell:active { transform: none; background: transparent; box-shadow: none; }
 
-        /* Плейсхолдер, держащий дырку в сетке пока ячейка раздута */
         .day-cell-placeholder {
             aspect-ratio: 1 / 1;
             visibility: hidden;
             pointer-events: none;
         }
 
-        /* Состояние самой ячейки, когда она раздувается в модальное окно */
         .day-cell.morphing-cell {
             position: fixed !important;
             aspect-ratio: auto !important;
@@ -231,8 +227,8 @@
             background: 
                 radial-gradient(135% 90% at 25% 0%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.03) 60%, transparent 100%),
                 rgba(22, 25, 34, 0.88);
-            backdrop-filter: blur(32px) saturate(200%) url(#liquidGlassFilter);
-            -webkit-backdrop-filter: blur(32px) saturate(200%);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
             box-shadow: 0 36px 72px rgba(0,0,0,0.74), inset 0 2px 20px rgba(255,255,255,0.18);
             will-change: top, left, width, height, border-radius;
         }
@@ -242,11 +238,10 @@
             transform: scale(0.7);
         }
 
-        /* Фон затемнения под раздутой ячейкой */
         #modalBackdrop {
             position: fixed; inset: 0; z-index: 1000;
             background: rgba(2, 4, 10, 0.56);
-            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             opacity: 0; pointer-events: none;
             transition: opacity 0.34s var(--spring);
         }
@@ -254,7 +249,6 @@
             opacity: 1; pointer-events: auto;
         }
 
-        /* Внутренний контент внутри раздутой ячейки */
         .cell-modal-inner {
             display: flex; flex-direction: column; height: 100%; min-height: 0; width: 100%;
             opacity: 0;
@@ -286,9 +280,6 @@
         }
         #measurementList::-webkit-scrollbar { display: none; }
 
-        /* =========================================
-           КАРТОЧКИ LIQUID GLASS (ЭКРАН "ДЕНЬ")
-           ========================================= */
         @keyframes liquidCardRise {
             0% { opacity: 0; transform: scale(0.94); border-radius: 32px; }
             100% { opacity: 1; transform: scale(1); }
@@ -467,6 +458,7 @@
 
         .m-top-row {
             display: flex; justify-content: space-between; align-items: center; width: 100%;
+            pointer-events: none;
         }
         .m-right-wrap {
             display: flex; align-items: center; gap: 8px;
@@ -488,6 +480,7 @@
             transform: scale(0.94);
             transform-origin: top center;
             transition: max-height 0.46s var(--spring), opacity 0.26s ease, margin-top 0.34s var(--spring), transform 0.42s var(--spring);
+            pointer-events: none;
         }
         .measurement-item.open .m-expand-body {
             max-height: 185px;
@@ -513,9 +506,6 @@
         .m-time { color: var(--text-secondary); font-size: 15px; font-weight: 500; }
         .m-value { font-size: 17px; font-weight: 600; }
 
-        /* =========================================
-           КНОПКА + (FAB)
-           ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
             width: 56px; height: 56px;
@@ -523,8 +513,8 @@
             background: 
                 radial-gradient(135% 100% at 28% 12%, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.04) 68%),
                 rgba(28, 32, 44, 0.72);
-            backdrop-filter: blur(26px) saturate(200%) url(#liquidGlassFilter);
-            -webkit-backdrop-filter: blur(26px) saturate(200%);
+            backdrop-filter: blur(24px) saturate(190%);
+            -webkit-backdrop-filter: blur(24px) saturate(190%);
             box-shadow: 0 16px 36px rgba(0,0,0,0.54), inset 0 2px 16px rgba(255,255,255,0.24);
             border-radius: 28px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -614,15 +604,6 @@
     </style>
 </head>
 <body>
-    <svg width="0" height="0" style="position:absolute;pointer-events:none">
-        <defs>
-            <filter id="liquidGlassFilter" x="-10%" y="-10%" width="120%" height="120%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="1" seed="3" result="noise"/>
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
-            </filter>
-        </defs>
-    </svg>
-
     <div class="ambient-canvas">
         <div class="liquid-blob blob-1"></div>
         <div class="liquid-blob blob-2"></div>
@@ -737,6 +718,8 @@
         }
         const scriptUrl = "https://script.google.com/macros/s/AKfycbxh0Poo3SwCP1-2wyQtV5BfGbxvOTKG012sbCPbNlRe-ay82MaTmHbT1ComA1CXT3Wv_Q/exec";
         const PERSONAL_BEST = 400;
+        const MONTH_NAMES = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+        const MONTH_NAMES_GEN = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
 
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth(); 
@@ -745,11 +728,10 @@
         let monthlyChartInstance = null;
         let dayChartInstance = null;
         let intensityMainChartInstance = null;
-        let inlineCharts = {};
+        const inlineCharts = new Map();
         let dayRangeLimit = 7;
         let currentView = 'calendar';
 
-        // Состояние раскрытой ячейки (1-в-1 как кнопка +)
         let activeCell = null;
         let activePlaceholder = null;
         let activeCellOriginRect = null;
@@ -792,8 +774,7 @@
             }
 
             const d = new Date(str);
-            if (!isNaN(d.getTime())) return d;
-            return null;
+            return isNaN(d.getTime()) ? null : d;
         }
 
         function parsePoints(rawPoints, peakFlow) {
@@ -821,15 +802,18 @@
 
         function buildIntensityLabels(count) {
             const dt = getSampleStepSec(count);
-            return Array.from({ length: count }, (_, i) => ((i * dt).toFixed(2) + 'с'));
+            const labels = new Array(count);
+            for (let i = 0; i < count; i++) labels[i] = (i * dt).toFixed(2) + 'с';
+            return labels;
         }
 
         function drawIntensityChart(canvasEl, points, color, existingChart = null) {
             if (!canvasEl) return null;
-            let trimmed = [...points];
-            while (trimmed.length > 8 && trimmed[trimmed.length - 1] === 0 && trimmed[trimmed.length - 2] === 0 && trimmed[trimmed.length - 3] === 0) {
-                trimmed.pop();
+            let end = points.length;
+            while (end > 8 && points[end - 1] === 0 && points[end - 2] === 0 && points[end - 3] === 0) {
+                end--;
             }
+            const trimmed = end === points.length ? points : points.slice(0, end);
             const labels = buildIntensityLabels(trimmed.length);
             const showDots = trimmed.length <= 70 ? 2 : 0;
 
@@ -840,7 +824,7 @@
                 existingChart.data.datasets[0].backgroundColor = color + '32';
                 existingChart.data.datasets[0].pointRadius = showDots;
                 existingChart.data.datasets[0].pointBackgroundColor = color;
-                existingChart.update();
+                existingChart.update('none');
                 return existingChart;
             }
 
@@ -864,7 +848,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: { duration: 420, easing: 'easeOutQuart' },
+                    animation: { duration: 360, easing: 'easeOutQuart' },
                     plugins: { legend: { display: false } },
                     scales: {
                         x: {
@@ -879,6 +863,15 @@
                     }
                 }
             });
+        }
+
+        function cleanupInlineCharts(prefix) {
+            for (const [key, chart] of inlineCharts.entries()) {
+                if (key.startsWith(prefix)) {
+                    chart.destroy();
+                    inlineCharts.delete(key);
+                }
+            }
         }
 
         function toggleFab(e) {
@@ -896,7 +889,7 @@
         });
 
         function switchToView(target, e) {
-            if(e) e.stopPropagation(); 
+            if (e) e.stopPropagation(); 
             document.getElementById('fabContainer').classList.remove('expanded');
             if (activeCell) closeExpandedCell(true);
             if (currentView === target) return;
@@ -944,13 +937,19 @@
                     if (!dateObj || isNaN(flow) || flow <= 0) continue; 
                     
                     const points = parsePoints(data[i][2], flow);
-                    const dateKey = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
-                    const timeStr = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0') + ':' + String(dateObj.getSeconds()).padStart(2, '0');
-                    const shortTime = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0');
-                    const fullDate = String(dateObj.getDate()).padStart(2, '0') + '.' + String(dateObj.getMonth()+1).padStart(2, '0') + ' • ' + shortTime;
-                    const hour = dateObj.getHours();
+                    const y = dateObj.getFullYear();
+                    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const d = String(dateObj.getDate()).padStart(2, '0');
+                    const hh = String(dateObj.getHours()).padStart(2, '0');
+                    const mm = String(dateObj.getMinutes()).padStart(2, '0');
+                    const ss = String(dateObj.getSeconds()).padStart(2, '0');
+
+                    const dateKey = `${y}-${m}-${d}`;
+                    const timeStr = `${hh}:${mm}:${ss}`;
+                    const shortTime = `${hh}:${mm}`;
+                    const fullDate = `${d}.${m} • ${shortTime}`;
                     
-                    const rec = { ts: dateObj.getTime(), time: timeStr, fullDate: fullDate, shortTime: shortTime, flow: flow, hour: hour, points: points };
+                    const rec = { ts: dateObj.getTime(), time: timeStr, fullDate, shortTime, flow, hour: dateObj.getHours(), points };
                     if (!allData[dateKey]) allData[dateKey] = [];
                     allData[dateKey].push(rec);
                     flatRecords.push(rec);
@@ -967,17 +966,28 @@
             }
         }
 
+        // Единый делегированный обработчик клика по ячейкам календаря
+        document.getElementById('calendarGrid').addEventListener('click', function(e) {
+            const cell = e.target.closest('.day-cell');
+            if (!cell || cell.classList.contains('empty-cell') || cell.classList.contains('morphing-cell')) return;
+            const day = Number(cell.dataset.day);
+            const dateKey = cell.dataset.key;
+            if (!day || !dateKey) return;
+            openCellMorph(cell, day, allData[dateKey] || []);
+        });
+
         function renderCalendar() {
             if (activeCell) closeExpandedCell(true);
-            const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-            document.getElementById('monthTitle').innerText = monthNames[currentMonth] + " " + currentYear;
-            document.getElementById('monthTitleGraph').innerText = monthNames[currentMonth] + " " + currentYear;
+            const title = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
+            document.getElementById('monthTitle').innerText = title;
+            document.getElementById('monthTitleGraph').innerText = title;
             
             const grid = document.getElementById('calendarGrid');
             const frag = document.createDocumentFragment();
-            let firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            let startDay = firstDay === 0 ? 7 : firstDay; 
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const startDay = firstDay === 0 ? 7 : firstDay; 
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-`;
             
             for (let i = 1; i < startDay; i++) {
                 const emptyDiv = document.createElement('div');
@@ -986,28 +996,31 @@
             }
             
             const today = new Date();
+            const isCurrentMonthYear = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+            const todayDate = today.getDate();
+
             for (let day = 1; day <= daysInMonth; day++) {
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
                 cell.style.animationDelay = `${Math.min(day * 0.01, 0.3)}s`;
-                if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) cell.classList.add('today');
+                if (isCurrentMonthYear && day === todayDate) cell.classList.add('today');
                 
-                const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-                const measurements = allData[dateKey] || [];
-                
-                if (measurements.length > 0) {
+                const dateKey = monthPrefix + String(day).padStart(2, '0');
+                cell.dataset.day = day;
+                cell.dataset.key = dateKey;
+
+                const measurements = allData[dateKey];
+                if (measurements && measurements.length > 0) {
                     cell.classList.add('has-data');
-                    const maxFlow = Math.max(...measurements.map(m => m.flow));
+                    let maxFlow = 0;
+                    for (let j = 0; j < measurements.length; j++) {
+                        if (measurements[j].flow > maxFlow) maxFlow = measurements[j].flow;
+                    }
                     const colorClass = maxFlow >= 320 ? 'val-green' : 'val-blue';
                     cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val ${colorClass}">${Math.round(maxFlow)}</span>`;
                 } else {
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
                 }
-                
-                cell.addEventListener('click', function(e) {
-                    if (this.classList.contains('morphing-cell')) return;
-                    openCellMorph(this, day, measurements);
-                });
                 frag.appendChild(cell);
             }
             grid.innerHTML = '';
@@ -1017,23 +1030,27 @@
         function renderMonthlyGraph() {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            let labels = [];
-            let morningData = [];
-            let eveningData = [];
+            const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-`;
+            const labels = new Array(daysInMonth);
+            const morningData = new Array(daysInMonth);
+            const eveningData = new Array(daysInMonth);
 
             for (let day = 1; day <= daysInMonth; day++) {
-                labels.push(day);
-                const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-                const measurements = allData[dateKey];
+                labels[day - 1] = day;
+                const measurements = allData[monthPrefix + String(day).padStart(2, '0')];
                 
                 if (measurements && measurements.length > 0) {
-                    const morning = measurements.filter(m => m.hour < 12);
-                    const evening = measurements.filter(m => m.hour >= 12);
-                    morningData.push(morning.length > 0 ? Math.max(...morning.map(m => m.flow)) : null);
-                    eveningData.push(evening.length > 0 ? Math.max(...evening.map(m => m.flow)) : null);
+                    let maxM = -1, maxE = -1;
+                    for (let j = 0; j < measurements.length; j++) {
+                        const m = measurements[j];
+                        if (m.hour < 12) { if (m.flow > maxM) maxM = m.flow; }
+                        else { if (m.flow > maxE) maxE = m.flow; }
+                    }
+                    morningData[day - 1] = maxM >= 0 ? maxM : null;
+                    eveningData[day - 1] = maxE >= 0 ? maxE : null;
                 } else {
-                    morningData.push(null);
-                    eveningData.push(null);
+                    morningData[day - 1] = null;
+                    eveningData[day - 1] = null;
                 }
             }
 
@@ -1042,7 +1059,7 @@
             monthlyChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [
                         {
                             label: 'Утро',
@@ -1072,7 +1089,7 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    animation: { duration: 550, easing: 'easeOutQuart' },
+                    animation: { duration: 450, easing: 'easeOutQuart' },
                     plugins: { legend: { display: true, labels: { color: 'rgba(235,235,245,0.75)' } } },
                     scales: {
                         x: { ticks: { color: 'rgba(235,235,245,0.58)', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 }, grid: { display: false } },
@@ -1089,14 +1106,17 @@
             return { label: 'Красная зона', cls: 'zone-red', color: '#FF453A' };
         }
 
-        function createExpandableMeasurementCard(m, labelText, uid, onSelectCallback = null) {
+        function createExpandableMeasurementCard(m, labelText, uid) {
             const z = getZone(m.flow);
             const item = document.createElement('div');
             item.className = 'measurement-item';
+            item.dataset.uid = uid;
+            item._record = m;
 
-            const activePointsCount = m.points.filter(v => v > 0).length;
-            const dt = getSampleStepSec(m.points.length);
-            const durationSec = (activePointsCount * dt).toFixed(2);
+            let activePointsCount = 0;
+            for (let i = 0; i < m.points.length; i++) if (m.points[i] > 0) activePointsCount++;
+            const durationSec = (activePointsCount * getSampleStepSec(m.points.length)).toFixed(2);
+
             item.innerHTML = `
                 <div class="m-top-row">
                     <span class="m-time">🕒 ${labelText}</span>
@@ -1115,34 +1135,41 @@
                     </div>
                 </div>
             `;
-
-            item.addEventListener('click', (e) => {
-                e.stopPropagation();
-                haptic('selection');
-                const wasOpen = item.classList.contains('open');
-
-                item.parentElement.querySelectorAll('.measurement-item.open').forEach(el => {
-                    el.classList.remove('open');
-                });
-
-                if (!wasOpen) {
-                    item.classList.add('open');
-                    requestAnimationFrame(() => {
-                        const canvas = item.querySelector(`#canvas_${uid}`);
-                        if (inlineCharts[uid]) {
-                            inlineCharts[uid].destroy();
-                        }
-                        inlineCharts[uid] = drawIntensityChart(canvas, m.points, z.color);
-                    });
-                }
-
-                if (onSelectCallback) {
-                    onSelectCallback(m);
-                }
-            });
-
             return item;
         }
+
+        function handleMeasurementListClick(container, e, onSelectCallback = null) {
+            const item = e.target.closest('.measurement-item');
+            if (!item) return;
+            e.stopPropagation();
+            haptic('selection');
+
+            const wasOpen = item.classList.contains('open');
+            const prevOpen = container.querySelector('.measurement-item.open');
+            if (prevOpen) prevOpen.classList.remove('open');
+
+            const m = item._record;
+            const uid = item.dataset.uid;
+            if (!wasOpen && m) {
+                item.classList.add('open');
+                const z = getZone(m.flow);
+                requestAnimationFrame(() => {
+                    const canvas = item.querySelector(`#canvas_${uid}`);
+                    if (inlineCharts.has(uid)) {
+                        inlineCharts.get(uid).destroy();
+                    }
+                    inlineCharts.set(uid, drawIntensityChart(canvas, m.points, z.color));
+                });
+            }
+
+            if (onSelectCallback && m) {
+                onSelectCallback(m);
+            }
+        }
+
+        document.getElementById('dayHistoryList').addEventListener('click', function(e) {
+            handleMeasurementListClick(this, e, selectMainIntensityRecord);
+        });
 
         function setDayRange(limit, index, btn) {
             if (dayRangeLimit === limit) return;
@@ -1158,14 +1185,10 @@
 
         function updateDayChartOnly() {
             const slice = flatRecords.slice(0, dayRangeLimit).reverse();
-            const labels = slice.map(r => r.shortTime);
-            const values = slice.map(r => r.flow);
-            const colors = slice.map(r => getZone(r.flow).color);
-
             if (dayChartInstance) {
-                dayChartInstance.data.labels = labels;
-                dayChartInstance.data.datasets[0].data = values;
-                dayChartInstance.data.datasets[0].pointBackgroundColor = colors;
+                dayChartInstance.data.labels = slice.map(r => r.shortTime);
+                dayChartInstance.data.datasets[0].data = slice.map(r => r.flow);
+                dayChartInstance.data.datasets[0].pointBackgroundColor = slice.map(r => getZone(r.flow).color);
                 dayChartInstance.update();
             }
         }
@@ -1180,6 +1203,7 @@
         function renderDayView(withCounter = true) {
             const listEl = document.getElementById('dayHistoryList');
             document.getElementById('totalRecordsCount').innerText = flatRecords.length ? `${flatRecords.length} шт.` : '';
+            cleanupInlineCharts('day_');
 
             if (!flatRecords.length) {
                 document.getElementById('lastFlow').innerText = '0';
@@ -1195,16 +1219,17 @@
             const bestEl = document.getElementById('bestFlowNum');
             const avgEl = document.getElementById('avgFlowNum');
 
-            const bestVal = PERSONAL_BEST;
-            const avgVal = Math.round(flatRecords.reduce((s, r) => s + r.flow, 0) / flatRecords.length);
+            let sum = 0;
+            for (let i = 0; i < flatRecords.length; i++) sum += flatRecords[i].flow;
+            const avgVal = Math.round(sum / flatRecords.length);
 
             if (withCounter) {
                 animateValue(heroEl, Math.round(latest.flow), 520);
-                animateValue(bestEl, bestVal, 520);
+                animateValue(bestEl, PERSONAL_BEST, 520);
                 animateValue(avgEl, avgVal, 520);
             } else {
                 heroEl.innerText = Math.round(latest.flow);
-                bestEl.innerText = bestVal;
+                bestEl.innerText = PERSONAL_BEST;
                 avgEl.innerText = avgVal;
             }
 
@@ -1218,15 +1243,9 @@
             selectMainIntensityRecord(latest);
 
             const frag = document.createDocumentFragment();
-            flatRecords.forEach((item, idx) => {
-                const card = createExpandableMeasurementCard(
-                    item,
-                    item.fullDate,
-                    `day_${idx}`,
-                    (selectedRec) => selectMainIntensityRecord(selectedRec)
-                );
-                frag.appendChild(card);
-            });
+            for (let idx = 0; idx < flatRecords.length; idx++) {
+                frag.appendChild(createExpandableMeasurementCard(flatRecords[idx], flatRecords[idx].fullDate, `day_${idx}`));
+            }
             listEl.innerHTML = '';
             listEl.appendChild(frag);
 
@@ -1257,7 +1276,7 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    animation: { duration: 480, easing: 'easeOutQuart' },
+                    animation: { duration: 440, easing: 'easeOutQuart' },
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { ticks: { color: 'rgba(235,235,245,0.58)', font: { size: 10 } }, grid: { display: false } },
@@ -1267,9 +1286,6 @@
             });
         }
 
-        // ============================================================
-        // САМА ЯЧЕЙКА РАЗДУВАЕТСЯ В ОКНО (1-В-1 КАК КНОПКА +)
-        // ============================================================
         function openCellMorph(cellElement, day, measurements) {
             haptic('light');
             if (activeCell) closeExpandedCell(true);
@@ -1278,21 +1294,18 @@
             activeCell = cellElement;
             activeCellOriginRect = rect;
 
-            // Вставляем плейсхолдер в сетку, чтобы остальные ячейки не сдвинулись
             const placeholder = document.createElement('div');
             placeholder.className = 'day-cell-placeholder';
             cellElement.parentNode.insertBefore(placeholder, cellElement);
             activePlaceholder = placeholder;
 
-            // Переносим саму ячейку в body, чтобы transform у #calendarView не сбивал fixed
             document.body.appendChild(cellElement);
 
-            const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             const inner = document.createElement('div');
             inner.className = 'cell-modal-inner';
             inner.innerHTML = `
                 <div class="expanded-header">
-                    <div class="expanded-title">${day} ${monthNames[currentMonth]}</div>
+                    <div class="expanded-title">${day} ${MONTH_NAMES_GEN[currentMonth]}</div>
                     <button class="close-btn" type="button">×</button>
                 </div>
                 <div id="measurementList"></div>
@@ -1303,6 +1316,10 @@
             });
 
             const list = inner.querySelector('#measurementList');
+            list.addEventListener('click', function(e) {
+                handleMeasurementListClick(this, e, null);
+            });
+
             if (measurements.length === 0) {
                 const empty = document.createElement('div');
                 empty.style.cssText = "text-align:center; color:var(--text-secondary); margin-top:20px; font-size:15px;";
@@ -1310,13 +1327,14 @@
                 list.appendChild(empty);
             } else {
                 const sorted = [...measurements].sort((a, b) => a.time.localeCompare(b.time));
-                sorted.forEach((m, idx) => {
-                    list.appendChild(createExpandableMeasurementCard(m, m.time, `modal_${day}_${idx}`));
-                });
+                const frag = document.createDocumentFragment();
+                for (let idx = 0; idx < sorted.length; idx++) {
+                    frag.appendChild(createExpandableMeasurementCard(sorted[idx], sorted[idx].time, `modal_${day}_${idx}`));
+                }
+                list.appendChild(frag);
             }
             cellElement.appendChild(inner);
 
-            // Стартовые координаты ячейки
             cellElement.style.transition = 'none';
             cellElement.style.top = rect.top + 'px';
             cellElement.style.left = rect.left + 'px';
@@ -1328,7 +1346,6 @@
 
             document.getElementById('modalBackdrop').classList.add('active');
 
-            // Раздуваем саму ячейку на весь экран (как кнопка +)
             requestAnimationFrame(() => {
                 cellElement.style.transition = 'top 0.44s var(--spring), left 0.44s var(--spring), width 0.44s var(--spring), height 0.44s var(--spring), border-radius 0.44s var(--spring)';
                 cellElement.classList.add('is-open');
@@ -1354,8 +1371,14 @@
 
             document.getElementById('modalBackdrop').classList.remove('active');
             cell.classList.remove('is-open');
+            cleanupInlineCharts('modal_');
 
+            let finished = false;
             const finishRestore = () => {
+                if (finished) return;
+                finished = true;
+                cell.removeEventListener('transitionend', onEnd);
+
                 const inner = cell.querySelector('.cell-modal-inner');
                 if (inner) inner.remove();
 
@@ -1381,11 +1404,18 @@
                 activeCellOriginRect = null;
             };
 
+            const onEnd = (e) => {
+                if (e.target === cell && e.propertyName === 'width') {
+                    finishRestore();
+                }
+            };
+
             if (instant || !rect) {
                 finishRestore();
                 return;
             }
 
+            cell.addEventListener('transitionend', onEnd);
             cell.style.transition = 'top 0.38s var(--spring), left 0.38s var(--spring), width 0.38s var(--spring), height 0.38s var(--spring), border-radius 0.38s var(--spring)';
             cell.style.top = rect.top + 'px';
             cell.style.left = rect.left + 'px';
@@ -1393,7 +1423,7 @@
             cell.style.height = rect.height + 'px';
             cell.style.borderRadius = '20px';
 
-            restoreTimer = setTimeout(finishRestore, 390);
+            restoreTimer = setTimeout(finishRestore, 420);
         }
 
         document.getElementById('prevBtn').addEventListener('click', () => { haptic('selection'); currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); });
@@ -1405,4 +1435,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 14.9) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.0) =================== -->
