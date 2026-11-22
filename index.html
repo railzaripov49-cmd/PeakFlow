@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.1 - LIQUID GLASS + ДЕНЬ) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.2 - ПОЛНЫЙ ФАЙЛ) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -45,7 +45,6 @@
         }
         .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
 
-        /* Скролл только для вкладки "День" */
         #dayView {
             overflow-y: auto;
             padding-bottom: 100px;
@@ -438,8 +437,8 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); 
+        const tg = window.Telegram?.WebApp;
+        if (tg) tg.expand(); 
         const scriptUrl = "https://script.google.com/macros/s/AKfycbxh0Poo3SwCP1-2wyQtV5BfGbxvOTKG012sbCPbNlRe-ay82MaTmHbT1ComA1CXT3Wv_Q/exec";
         const PERSONAL_BEST = 400;
 
@@ -459,6 +458,26 @@
             core.style.transform = `translate(-50%, -50%) scale(${scale})`;
             core.style.opacity = opacity;
         }, 3000);
+
+        function parseAnyDate(raw) {
+            if (!raw) return null;
+            let d = new Date(raw);
+            if (!isNaN(d.getTime())) return d;
+
+            const str = String(raw).trim();
+            const m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[,\s]+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+            if (m) {
+                return new Date(
+                    Number(m[3]),
+                    Number(m[2]) - 1,
+                    Number(m[1]),
+                    Number(m[4] || 0),
+                    Number(m[5] || 0),
+                    Number(m[6] || 0)
+                );
+            }
+            return null;
+        }
 
         function toggleFab(e) {
             if (e.target.id === 'fabContainer' || e.target.classList.contains('fab-plus')) {
@@ -497,6 +516,7 @@
         }
 
         async function loadData() {
+            document.getElementById('lastTime').innerText = 'Загрузка данных...';
             try {
                 const response = await fetch(scriptUrl + "?action=getData");
                 const data = await response.json();
@@ -504,9 +524,9 @@
                 flatRecords = [];
 
                 for (let i = 1; i < data.length; i++) {
-                    const dateObj = new Date(data[i][0]); 
-                    const flow = parseFloat(data[i][1]); 
-                    if (isNaN(flow)) continue; 
+                    const dateObj = parseAnyDate(data[i][0]); 
+                    const flow = parseFloat(String(data[i][1]).replace(',', '.')); 
+                    if (!dateObj || isNaN(flow)) continue; 
                     
                     const dateKey = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
                     const timeStr = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0') + ':' + String(dateObj.getSeconds()).padStart(2, '0');
@@ -522,9 +542,11 @@
                 flatRecords.sort((a, b) => b.ts - a.ts);
                 renderCalendar();
                 if (currentView === 'graph') renderMonthlyGraph();
-                if (currentView === 'day') renderDayView();
+                renderDayView();
             } catch (error) {
                 console.error("Ошибка загрузки", error);
+                document.getElementById('lastTime').innerText = 'Ошибка загрузки';
+                renderCalendar();
             }
         }
 
@@ -634,7 +656,6 @@
             });
         }
 
-        // --- ВКЛАДКА "ДЕНЬ" ---
         function getZone(flow) {
             const pct = (flow / PERSONAL_BEST) * 100;
             if (pct >= 80) return { label: 'Зелёная зона', cls: 'zone-green', color: '#30D158' };
@@ -650,7 +671,14 @@
         }
 
         function renderDayView() {
-            if (!flatRecords.length) return;
+            const listEl = document.getElementById('dayHistoryList');
+            if (!flatRecords.length) {
+                document.getElementById('lastFlow').innerText = '0';
+                document.getElementById('lastTime').innerText = 'Замеров в таблице пока нет';
+                document.getElementById('avgFlow').innerHTML = `0 <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">л/м</span>`;
+                listEl.innerHTML = `<div style="text-align:center; color:#8E8E93; padding:16px; font-size:14px;">Нет данных</div>`;
+                return;
+            }
 
             const latest = flatRecords[0];
             const zone = getZone(latest.flow);
@@ -668,7 +696,6 @@
             document.getElementById('bestFlow').innerHTML = `${Math.round(bestVal)} <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">л/м</span>`;
             document.getElementById('avgFlow').innerHTML = `${avgVal} <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">л/м</span>`;
 
-            const listEl = document.getElementById('dayHistoryList');
             listEl.innerHTML = flatRecords.slice(0, 12).map(item => {
                 const z = getZone(item.flow);
                 return `
@@ -710,7 +737,6 @@
             });
         }
 
-        // --- АНИМАЦИЯ МОРФИНГА ---
         function openModal(cellElement, day, measurements) {
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
@@ -766,4 +792,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.1) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.2) =================== -->
