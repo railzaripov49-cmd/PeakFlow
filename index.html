@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.4 - GPU OPTIMIZED & FLUID) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.6 - ESP32 POINTS + SPARKLINES + DAY MODAL CHART) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -17,7 +17,7 @@
             --green: #30D158;
             --orange: #FF9F0A;
             --red: #FF453A;
-            --glass: rgba(24, 24, 26, 0.88);
+            --glass: rgba(24, 24, 26, 0.9);
             --glass-border: rgba(255, 255, 255, 0.14);
             --glass-highlight: rgba(255, 255, 255, 0.25);
             --spring: cubic-bezier(0.32, 0.72, 0, 1);
@@ -31,7 +31,6 @@
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
         }
 
-        /* Лёгкое GPU-ядро без перерисовки слоёв */
         #core {
             position: fixed; top: 50%; left: 50%; width: 380px; height: 380px;
             background: radial-gradient(circle, rgba(10, 132, 255, 0.22) 0%, rgba(48, 209, 88, 0.05) 45%, rgba(0, 0, 0, 0) 72%);
@@ -47,7 +46,6 @@
             100% { transform: translate3d(-50%, -49%, 0) scale(0.96); opacity: 0.75; }
         }
 
-        /* Чистые 120fps переходы экранов (только transform + opacity, без тяжелого filter: blur) */
         .view { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             opacity: 0; pointer-events: none; 
@@ -73,7 +71,10 @@
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
-            flex-shrink: 0;
+            flex-shrink: 0; gap: 8px;
+        }
+        .header-right-group {
+            display: flex; align-items: center; gap: 8px;
         }
         .header button { 
             background: rgba(255,255,255,0.1);
@@ -82,11 +83,16 @@
             color: var(--text); font-size: 18px; width: 40px; height: 40px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             cursor: pointer; 
-            transition: background 0.2s, transform 0.32s var(--spring-bounce);
+            transition: background 0.2s, transform 0.32s var(--spring-bounce), border-color 0.2s;
         }
         .header button:active { 
             background: rgba(255,255,255,0.22); 
             transform: scale(0.86); 
+        }
+        .header button.toggle-active {
+            background: rgba(10, 132, 255, 0.28);
+            border-top: 1px solid rgba(10, 132, 255, 0.65);
+            color: var(--blue);
         }
 
         .header .refresh-glass-btn {
@@ -121,7 +127,7 @@
 
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            border-radius: 16px; position: relative; cursor: pointer;
+            border-radius: 16px; position: relative; cursor: pointer; overflow: hidden;
             
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 100%);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -145,8 +151,33 @@
             box-shadow: 0 6px 16px rgba(10, 132, 255, 0.25), inset 0 1px 2px rgba(255,255,255,0.22);
         }
         
-        .day-num { font-size: 17px; font-weight: 500; color: var(--text); }
-        .day-val { font-size: 10px; font-weight: 600; position: absolute; bottom: 5px; }
+        .day-num { 
+            font-size: 17px; font-weight: 500; color: var(--text); z-index: 2;
+            transition: transform 0.28s var(--spring), font-size 0.28s var(--spring);
+        }
+        .day-val { 
+            font-size: 10px; font-weight: 600; position: absolute; bottom: 5px; z-index: 2;
+            transition: opacity 0.22s ease;
+        }
+
+        /* Режим спарклайнов в ячейках календаря */
+        .calendar.spark-mode .day-cell.has-spark .day-num {
+            font-size: 11px;
+            transform: translateY(-13px);
+            opacity: 0.85;
+        }
+        .calendar.spark-mode .day-cell.has-spark .day-val {
+            opacity: 0;
+        }
+        .cell-spark {
+            position: absolute; left: 4px; right: 4px; bottom: 4px; height: 22px;
+            opacity: 0; transform: scaleY(0.4); transform-origin: bottom;
+            transition: opacity 0.3s var(--spring), transform 0.38s var(--spring-bounce);
+            pointer-events: none; z-index: 1;
+        }
+        .calendar.spark-mode .cell-spark {
+            opacity: 1; transform: scaleY(1);
+        }
         
         .val-green { color: var(--green); }
         .val-blue { color: var(--blue); }
@@ -156,14 +187,13 @@
         .empty-cell:active { transform: none; background: transparent; box-shadow: none; }
 
         /* =========================================
-           ЭКРАН "ДЕНЬ" (60/120 FPS БЕЗ ТОРМОЗОВ БЛЮРА)
+           ЭКРАН "ДЕНЬ"
            ========================================= */
         @keyframes slideUpGlass {
             0% { opacity: 0; transform: translate3d(0, 22px, 0) scale(0.96); }
             100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
         }
 
-        /* Визуально идентично исходному стеклу, но рендерится в 10 раз быстрее */
         .glass-card, .stat-box {
             background: linear-gradient(145deg, rgba(32, 33, 36, 0.85) 0%, rgba(18, 19, 21, 0.92) 100%);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -203,9 +233,7 @@
             border-top: 1px solid rgba(255,255,255,0.2);
             transition: background 0.35s ease, color 0.35s ease, transform 0.38s var(--spring-bounce);
         }
-        .glass-badge.pulse {
-            transform: scale(1.08);
-        }
+        .glass-badge.pulse { transform: scale(1.08); }
         .zone-green { background: rgba(48, 209, 88, 0.2); color: var(--green); }
         .zone-orange { background: rgba(255, 159, 10, 0.2); color: var(--orange); }
         .zone-red { background: rgba(255, 69, 58, 0.2); color: var(--red); }
@@ -236,7 +264,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* Скользящий iOS Segmented Control */
         .glass-segmented {
             position: relative;
             display: flex;
@@ -265,9 +292,7 @@
             cursor: pointer; transition: color 0.25s ease, transform 0.2s;
         }
         .glass-segmented button:active { transform: scale(0.93); }
-        .glass-segmented button.active {
-            color: var(--text);
-        }
+        .glass-segmented button.active { color: var(--text); }
 
         .chart-wrap-day {
             height: 150px; position: relative;
@@ -283,7 +308,7 @@
         }
 
         /* =========================================
-           FAB МЕНЮ С ПРУЖИННОЙ ИНЕРЦИЕЙ
+           FAB МЕНЮ СЛЕВА СНИЗУ
            ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
@@ -300,9 +325,7 @@
             will-change: width, height, transform;
         }
         
-        #fabContainer:not(.expanded):active {
-            transform: scale(0.86);
-        }
+        #fabContainer:not(.expanded):active { transform: scale(0.86); }
 
         #fabContainer.expanded {
             width: 152px; height: 162px; border-radius: 26px;
@@ -345,7 +368,7 @@
         .fab-action-btn:active { background: rgba(255,255,255,0.22); transform: scale(0.93) !important; }
 
         /* =========================================
-           МОДАЛЬНОЕ ОКНО (ДВУСТОРОННИЙ МОРФИНГ)
+           МОДАЛЬНОЕ ОКНО ДНЯ (МОРФИНГ + ГРАФИК ДНЯ)
            ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
@@ -354,24 +377,21 @@
         
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.56); 
+            background: rgba(0, 0, 0, 0.58); 
             backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); 
             opacity: 0; transition: opacity 0.35s var(--spring); 
         }
         
         #modalContent {
             position: absolute;
-            top: 10vh; bottom: 10vh; left: 20px; right: 20px;
-            
+            top: 8vh; bottom: 8vh; left: 18px; right: 18px;
             background: var(--glass);
             backdrop-filter: blur(26px) saturate(150%); -webkit-backdrop-filter: blur(26px) saturate(150%);
             border-radius: 26px; 
             border: 1px solid var(--glass-border);
             border-top: 1px solid var(--glass-highlight);
             box-shadow: 0 28px 56px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.14);
-            
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
-            
             clip-path: inset(50% 50% 50% 50% round 16px); 
             transition: clip-path 0.62s var(--spring);
             will-change: clip-path;
@@ -381,7 +401,7 @@
         #expandedView.active { pointer-events: auto; opacity: 1; }
         #expandedView.active::before { opacity: 1; }
         
-        .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
+        .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-shrink: 0; }
         .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
         .close-btn { 
             background: rgba(255,255,255,0.12); border: none; color: var(--text); 
@@ -397,10 +417,19 @@
             opacity: 0; transform: translate3d(0, 8px, 0) scale(0.95);
             transition: opacity 0.25s ease, transform 0.38s var(--spring);
         }
-        
         #expandedView.active #modalInner {
             opacity: 1; transform: translate3d(0, 0, 0) scale(1);
             transition-delay: 0.12s;
+        }
+
+        /* График выдохов внутри модалки дня */
+        #modalChartBox {
+            height: 150px; flex-shrink: 0; margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px; padding: 10px 12px;
+            display: none;
         }
 
         #measurementList { 
@@ -413,7 +442,7 @@
             background: linear-gradient(145deg, rgba(32, 33, 36, 0.85) 0%, rgba(18, 19, 21, 0.92) 100%);
             border: 1px solid rgba(255, 255, 255, 0.05); 
             border-top: 1px solid rgba(255, 255, 255, 0.16);
-            padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
             flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.16);
             animation: slideUpGlass 0.38s var(--spring) backwards;
             transition: transform 0.26s var(--spring-bounce), background 0.18s;
@@ -443,7 +472,10 @@
         <div class="header">
             <button id="prevBtn">&#8249;</button>
             <span id="monthTitle"></span>
-            <button id="nextBtn">&#8250;</button>
+            <div class="header-right-group">
+                <button id="sparkToggleBtn" title="Графики в ячейках" onclick="toggleCalendarSparks()">📈</button>
+                <button id="nextBtn">&#8250;</button>
+            </div>
         </div>
         <div class="weekdays">
             <div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div class="weekends">СБ</div><div class="weekends">ВС</div>
@@ -479,7 +511,7 @@
                 <span id="lastFlow" class="hero-value">—</span>
                 <span class="hero-unit">л/мин</span>
             </div>
-            <div id="lastTime" class="hero-meta">Загрузка данных...</div>
+            <div id="lastTime" class="hero-meta">Загрузка данных с ESP32...</div>
         </div>
 
         <div class="stats-grid anim-stagger-2">
@@ -522,13 +554,16 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА -->
+    <!-- МОДАЛКА ДНЯ (С ГРАФИКОМ ЗА ДЕНЬ) -->
     <div id="expandedView" onclick="closeExpandedView()">
         <div id="modalContent" onclick="event.stopPropagation()">
             <div id="modalInner">
                 <div class="expanded-header">
                     <div class="expanded-title" id="sheetDateTitle">Дата</div>
                     <button class="close-btn" onclick="closeExpandedView()">×</button>
+                </div>
+                <div id="modalChartBox">
+                    <canvas id="modalDayChart"></canvas>
                 </div>
                 <div id="measurementList"></div>
             </div>
@@ -550,8 +585,10 @@
         let flatRecords = [];
         let monthlyChartInstance = null;
         let dayChartInstance = null;
+        let modalDayChartInstance = null;
         let dayRangeLimit = 7;
         let currentView = 'calendar';
+        let sparkMode = false;
         let lastMorphInset = 'inset(50% 50% 50% 50% round 16px)';
 
         function haptic(type = 'light') {
@@ -591,6 +628,36 @@
                 );
             }
             return null;
+        }
+
+        function toggleCalendarSparks() {
+            haptic('selection');
+            sparkMode = !sparkMode;
+            const grid = document.getElementById('calendarGrid');
+            const btn = document.getElementById('sparkToggleBtn');
+            grid.classList.toggle('spark-mode', sparkMode);
+            btn.classList.toggle('toggle-active', sparkMode);
+        }
+
+        function buildSparkSvg(measurements, isToday) {
+            if (!measurements || measurements.length < 2) return '';
+            const sorted = [...measurements].sort((a, b) => a.time.localeCompare(b.time));
+            const vals = sorted.map(m => m.flow);
+            const minV = Math.min(...vals);
+            const maxV = Math.max(...vals);
+            const span = (maxV - minV) || 1;
+            const w = 100, h = 24, pad = 3;
+
+            const pts = vals.map((v, i) => {
+                const x = (i / (vals.length - 1)) * w;
+                const y = h - pad - ((v - minV) / span) * (h - pad * 2);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+            }).join(' ');
+
+            const stroke = isToday ? '#FFFFFF' : '#30D158';
+            return `<svg class="cell-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+                <polyline fill="none" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="${pts}" />
+            </svg>`;
         }
 
         function toggleFab(e) {
@@ -642,7 +709,7 @@
                     btn.classList.add('spinning');
                 }
             }
-            document.getElementById('lastTime').innerText = 'Загрузка данных...';
+            document.getElementById('lastTime').innerText = 'Загрузка точек с ESP32...';
             try {
                 const response = await fetch(scriptUrl + "?action=getData");
                 const data = await response.json();
@@ -652,7 +719,8 @@
                 for (let i = 1; i < data.length; i++) {
                     const dateObj = parseAnyDate(data[i][0]); 
                     const flow = parseFloat(String(data[i][1]).replace(',', '.')); 
-                    if (!dateObj || isNaN(flow)) continue; 
+                    // Фильтруем пустые строки и старые тестовые выбросы > 600
+                    if (!dateObj || isNaN(flow) || flow <= 0 || flow > 600) continue; 
                     
                     const dateKey = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
                     const timeStr = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0') + ':' + String(dateObj.getSeconds()).padStart(2, '0');
@@ -661,7 +729,7 @@
                     const hour = dateObj.getHours();
                     
                     if (!allData[dateKey]) allData[dateKey] = [];
-                    allData[dateKey].push({ time: timeStr, flow: flow, hour: hour });
+                    allData[dateKey].push({ time: timeStr, shortTime: shortTime, flow: flow, hour: hour });
                     flatRecords.push({ ts: dateObj.getTime(), fullDate: fullDate, shortTime: shortTime, flow: flow });
                 }
 
@@ -682,6 +750,7 @@
             document.getElementById('monthTitleGraph').innerText = monthNames[currentMonth] + " " + currentYear;
             
             const grid = document.getElementById('calendarGrid');
+            grid.classList.toggle('spark-mode', sparkMode);
             grid.innerHTML = ''; 
             let firstDay = new Date(currentYear, currentMonth, 1).getDay();
             let startDay = firstDay === 0 ? 7 : firstDay; 
@@ -698,7 +767,8 @@
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
                 cell.style.animationDelay = `${Math.min(day * 0.01, 0.3)}s`;
-                if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) cell.classList.add('today');
+                const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+                if (isToday) cell.classList.add('today');
                 
                 const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
                 const measurements = allData[dateKey] || [];
@@ -706,7 +776,9 @@
                 if (measurements.length > 0) {
                     const maxFlow = Math.max(...measurements.map(m => m.flow));
                     const colorClass = maxFlow <= 12 ? 'val-green' : 'val-blue';
-                    cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val ${colorClass}">${maxFlow.toFixed(1)}</span>`;
+                    const sparkSvg = buildSparkSvg(measurements, isToday);
+                    if (sparkSvg) cell.classList.add('has-spark');
+                    cell.innerHTML = `<span class="day-num">${day}</span>${sparkSvg}<span class="day-val ${colorClass}">${Math.round(maxFlow)}</span>`;
                 } else {
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
                 }
@@ -778,7 +850,7 @@
                     plugins: { legend: { display: true, labels: { color: '#8E8E93' } } },
                     scales: {
                         x: { ticks: { color: '#8E8E93', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 }, grid: { display: false } },
-                        y: { min: 0, max: 1000, ticks: { color: '#8E8E93', stepSize: 50 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        y: { min: 0, max: 500, ticks: { color: '#8E8E93', stepSize: 50 }, grid: { color: 'rgba(255,255,255,0.05)' } }
                     }
                 }
             });
@@ -796,7 +868,6 @@
             haptic('selection');
             dayRangeLimit = limit;
 
-            // Скользящая капсула переключателя
             document.getElementById('segPill').style.transform = `translate3d(${index * 100}%, 0, 0)`;
 
             document.querySelectorAll('#dayView .glass-segmented button').forEach(b => b.classList.remove('active'));
@@ -814,7 +885,7 @@
                 dayChartInstance.data.labels = labels;
                 dayChartInstance.data.datasets[0].data = values;
                 dayChartInstance.data.datasets[0].pointBackgroundColor = colors;
-                dayChartInstance.update(); // Плавный морфинг линий без пересоздания canvas
+                dayChartInstance.update();
             }
         }
 
@@ -834,7 +905,7 @@
             const bestEl = document.getElementById('bestFlowNum');
             const avgEl = document.getElementById('avgFlowNum');
 
-            const bestVal = Math.round(Math.max(PERSONAL_BEST, ...flatRecords.map(r => r.flow)));
+            const bestVal = PERSONAL_BEST;
             const avgVal = Math.round(flatRecords.reduce((s, r) => s + r.flow, 0) / flatRecords.length);
 
             if (withCounter) {
@@ -901,25 +972,59 @@
             });
         }
 
-        // --- ДВУСТОРОННЯЯ АНИМАЦИЯ МОРФИНГА ---
+        // --- МОДАЛЬНОЕ ОКНО ДНЯ С ГРАФИКОМ ТОЧЕК ESP32 ЗА ДЕНЬ ---
         function openModal(cellElement, day, measurements) {
             haptic('light');
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
             
             const list = document.getElementById('measurementList');
+            const chartBox = document.getElementById('modalChartBox');
             list.innerHTML = ''; 
             
             if (measurements.length === 0) {
+                chartBox.style.display = 'none';
                 list.innerHTML = `<div style="text-align:center; color:#8E8E93; margin-top:20px; font-size:15px;">Нет данных</div>`;
             } else {
-                measurements.sort((a, b) => a.time.localeCompare(b.time));
-                measurements.forEach((m, idx) => {
+                const sorted = [...measurements].sort((a, b) => a.time.localeCompare(b.time));
+                
+                // Показываем и рисуем график точек за этот день
+                chartBox.style.display = 'block';
+                const ctx = document.getElementById('modalDayChart').getContext('2d');
+                if (modalDayChartInstance) modalDayChartInstance.destroy();
+                modalDayChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sorted.map(m => m.shortTime || m.time.slice(0, 5)),
+                        datasets: [{
+                            data: sorted.map(m => m.flow),
+                            borderColor: '#0A84FF',
+                            backgroundColor: 'rgba(10, 132, 255, 0.16)',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: sorted.map(m => getZone(m.flow).color),
+                            pointBorderColor: '#fff',
+                            fill: true,
+                            tension: 0.38
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        animation: { duration: 480, easing: 'easeOutQuart' },
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#8E8E93', font: { size: 10 } }, grid: { display: false } },
+                            y: { ticks: { color: '#8E8E93', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        }
+                    }
+                });
+
+                sorted.forEach((m, idx) => {
                     const item = document.createElement('div');
                     item.className = 'measurement-item';
                     item.style.animationDelay = `${0.12 + idx * 0.035}s`;
-                    const colorClass = m.flow <= 12 ? 'val-green' : 'val-blue';
-                    item.innerHTML = `<span class="m-time">🕒 ${m.time}</span><span class="m-value ${colorClass}">${m.flow.toFixed(2)} л/м</span>`;
+                    const z = getZone(m.flow);
+                    item.innerHTML = `<span class="m-time">🕒 ${m.time}</span><span class="m-value" style="color:${z.color}">${Math.round(m.flow)} л/м</span>`;
                     list.appendChild(item);
                 });
             }
@@ -966,4 +1071,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.4) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.6) =================== -->
