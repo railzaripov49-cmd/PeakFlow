@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.2 - ПОЛНЫЙ ФАЙЛ) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.3 - MAX FLUID LIQUID GLASS) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -17,10 +17,11 @@
             --green: #30D158;
             --orange: #FF9F0A;
             --red: #FF453A;
-            --glass: rgba(30, 30, 30, 0.7);
+            --glass: rgba(30, 30, 30, 0.72);
             --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-highlight: rgba(255, 255, 255, 0.25);
+            --glass-highlight: rgba(255, 255, 255, 0.28);
             --spring: cubic-bezier(0.32, 0.72, 0, 1);
+            --spring-bounce: cubic-bezier(0.34, 1.45, 0.64, 1);
         }
 
         body { 
@@ -30,24 +31,41 @@
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
         }
 
+        /* Живое дыхание ядра на фоне */
         #core {
-            position: fixed; top: 50%; left: 50%; width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(10, 132, 255, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+            position: fixed; top: 50%; left: 50%; width: 380px; height: 380px;
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.24) 0%, rgba(48, 209, 88, 0.06) 45%, rgba(0, 0, 0, 0) 72%);
             border-radius: 50%; transform: translate(-50%, -50%) scale(1);
             z-index: 0; pointer-events: none;
-            transition: transform 1.5s ease-in-out, opacity 1.5s ease-in-out;
+            animation: coreFloat 7s ease-in-out infinite alternate;
+            will-change: transform, opacity;
         }
 
+        @keyframes coreFloat {
+            0% { transform: translate(-52%, -48%) scale(0.92); opacity: 0.65; }
+            50% { transform: translate(-48%, -52%) scale(1.08); opacity: 0.95; }
+            100% { transform: translate(-50%, -49%) scale(0.96); opacity: 0.75; }
+        }
+
+        /* Пружинные переходы между экранами */
         .view { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            opacity: 0; pointer-events: none; transition: opacity 0.3s; 
+            opacity: 0; pointer-events: none; 
+            transform: scale(0.95) translateY(14px);
+            filter: blur(6px);
+            transition: opacity 0.42s var(--spring), transform 0.52s var(--spring), filter 0.42s var(--spring); 
             padding: 20px; box-sizing: border-box; z-index: 1;
+            will-change: opacity, transform, filter;
         }
-        .view.active { opacity: 1; pointer-events: auto; z-index: 10; }
+        .view.active { 
+            opacity: 1; pointer-events: auto; z-index: 10; 
+            transform: scale(1) translateY(0);
+            filter: blur(0px);
+        }
 
         #dayView {
             overflow-y: auto;
-            padding-bottom: 100px;
+            padding-bottom: 110px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
@@ -58,15 +76,23 @@
             margin-bottom: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
             flex-shrink: 0;
         }
+        .header span {
+            transition: opacity 0.25s var(--spring), transform 0.35s var(--spring);
+        }
         .header button { 
-            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.32);
             color: var(--text); font-size: 18px; width: 40px; height: 40px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: background 0.2s, transform 0.1s;
+            cursor: pointer; 
+            transition: background 0.2s, transform 0.35s var(--spring-bounce), box-shadow 0.2s;
         }
-        .header button:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
+        .header button:active { 
+            background: rgba(255,255,255,0.24); 
+            transform: scale(0.84); 
+            box-shadow: 0 0 16px rgba(255,255,255,0.2);
+        }
 
         .header .refresh-glass-btn {
             width: auto; height: 36px; border-radius: 18px; padding: 0 14px;
@@ -85,25 +111,37 @@
             align-content: start; 
         }
 
+        @keyframes popInCell {
+            0% { opacity: 0; transform: scale(0.75) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
             border-radius: 16px; position: relative; cursor: pointer;
             
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.24);
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.24), inset 0 1px 2px rgba(255,255,255,0.12);
             
-            transition: transform 0.15s var(--spring), background 0.2s;
+            animation: popInCell 0.45s var(--spring-bounce) backwards;
+            transition: transform 0.32s var(--spring-bounce), background 0.2s, box-shadow 0.25s;
+            will-change: transform;
         }
-        .day-cell:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        .day-cell:active { 
+            transform: scale(0.84); 
+            background: rgba(255,255,255,0.24); 
+            box-shadow: 0 0 18px rgba(10, 132, 255, 0.35);
+        }
         
         .day-cell.today { 
-            background: rgba(10, 132, 255, 0.3); 
-            border-top: 1px solid rgba(10, 132, 255, 0.5);
-            border-left: 1px solid rgba(10, 132, 255, 0.3);
+            background: linear-gradient(135deg, rgba(10, 132, 255, 0.38) 0%, rgba(10, 132, 255, 0.18) 100%); 
+            border-top: 1px solid rgba(10, 132, 255, 0.65);
+            border-left: 1px solid rgba(10, 132, 255, 0.4);
+            box-shadow: 0 6px 18px rgba(10, 132, 255, 0.28), inset 0 1px 2px rgba(255,255,255,0.25);
         }
         
         .day-num { font-size: 17px; font-weight: 500; color: var(--text); }
@@ -111,25 +149,42 @@
         
         .val-green { color: var(--green); }
         .val-blue { color: var(--blue); }
-        .day-cell.today .day-val { color: rgba(255,255,255,0.9); }
+        .day-cell.today .day-val { color: rgba(255,255,255,0.95); }
 
-        .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; }
-        .empty-cell:active { transform: none; background: transparent; }
+        .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; animation: none; }
+        .empty-cell:active { transform: none; background: transparent; box-shadow: none; }
 
         /* =========================================
            ЭКРАН "ДЕНЬ" В СТИЛЕ LIQUID GLASS
            ========================================= */
-        .glass-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
-            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        @keyframes slideUpGlass {
+            0% { opacity: 0; transform: translateY(18px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .glass-card, .stat-box {
+            background: linear-gradient(135deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            border-top: 1px solid rgba(255, 255, 255, 0.22);
+            border-top: 1px solid rgba(255, 255, 255, 0.24);
             border-left: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.12);
-            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.14);
+            transition: transform 0.35s var(--spring-bounce), background 0.25s;
+        }
+        .glass-card:active, .stat-box:active {
+            transform: scale(0.975);
+        }
+
+        .glass-card {
+            border-radius: 22px;
             padding: 16px;
             margin-bottom: 14px;
         }
+
+        #dayView.active .anim-stagger-1 { animation: slideUpGlass 0.5s var(--spring) 0.03s backwards; }
+        #dayView.active .anim-stagger-2 { animation: slideUpGlass 0.5s var(--spring) 0.09s backwards; }
+        #dayView.active .anim-stagger-3 { animation: slideUpGlass 0.5s var(--spring) 0.15s backwards; }
+        #dayView.active .anim-stagger-4 { animation: slideUpGlass 0.5s var(--spring) 0.21s backwards; }
 
         .card-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -143,7 +198,8 @@
 
         .glass-badge {
             font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            border-top: 1px solid rgba(255,255,255,0.22);
+            transition: background 0.35s ease, color 0.35s ease, transform 0.35s var(--spring-bounce);
         }
         .zone-green { background: rgba(48, 209, 88, 0.2); color: var(--green); }
         .zone-orange { background: rgba(255, 159, 10, 0.2); color: var(--orange); }
@@ -153,7 +209,8 @@
             display: flex; align-items: baseline; gap: 6px; margin: 4px 0 8px;
         }
         .hero-value {
-            font-size: 46px; font-weight: 700; letter-spacing: -1.5px; line-height: 1;
+            font-size: 48px; font-weight: 700; letter-spacing: -1.5px; line-height: 1;
+            font-variant-numeric: tabular-nums;
         }
         .hero-unit {
             font-size: 16px; font-weight: 500; color: var(--text-secondary);
@@ -166,36 +223,33 @@
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
         }
         .stat-box {
-            background: linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 100%);
-            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 18px;
             padding: 14px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
         }
         .stat-num {
             font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-top: 4px;
+            font-variant-numeric: tabular-nums;
         }
 
         .glass-segmented {
             display: flex;
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 11px;
+            border-radius: 12px;
             padding: 3px;
             margin-bottom: 12px;
         }
         .glass-segmented button {
             flex: 1; border: none; background: transparent; color: var(--text-secondary);
-            font-size: 12px; font-weight: 600; padding: 6px 0; border-radius: 8px;
-            cursor: pointer; transition: all 0.2s var(--spring);
+            font-size: 12px; font-weight: 600; padding: 6px 0; border-radius: 9px;
+            cursor: pointer; transition: all 0.32s var(--spring-bounce);
         }
+        .glass-segmented button:active { transform: scale(0.92); }
         .glass-segmented button.active {
-            background: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.18);
             color: var(--text);
-            border-top: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            border-top: 1px solid rgba(255, 255, 255, 0.28);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.28);
         }
 
         .chart-wrap-day {
@@ -211,37 +265,45 @@
             display: flex; flex-direction: column; gap: 8px;
         }
 
-        /* FAB МЕНЮ */
+        /* =========================================
+           FAB МЕНЮ С ПРУЖИННОЙ ИНЕРЦИЕЙ
+           ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
             width: 56px; height: 56px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 10px 32px rgba(0,0,0,0.45), inset 0 1px 1px rgba(255,255,255,0.2);
             border-radius: 28px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: width 0.4s var(--spring), height 0.4s var(--spring), border-radius 0.4s var(--spring);
+            transition: width 0.48s var(--spring-bounce), height 0.48s var(--spring-bounce), border-radius 0.45s var(--spring), background 0.3s, transform 0.25s var(--spring-bounce);
             z-index: 500; overflow: hidden; cursor: pointer;
+            will-change: width, height, transform;
         }
         
+        #fabContainer:not(.expanded):active {
+            transform: scale(0.86);
+        }
+
         #fabContainer.expanded {
-            width: 145px; height: 156px; border-radius: 24px;
-            background: rgba(30, 30, 30, 0.85);
+            width: 152px; height: 162px; border-radius: 26px;
+            background: rgba(28, 28, 30, 0.86);
+            box-shadow: 0 18px 44px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.22);
             cursor: default;
         }
 
         .fab-plus { 
             position: absolute; font-size: 32px; font-weight: 300; color: white; 
-            transition: opacity 0.2s, transform 0.3s var(--spring); 
+            transition: opacity 0.22s, transform 0.42s var(--spring-bounce); 
         }
-        #fabContainer.expanded .fab-plus { opacity: 0; transform: rotate(45deg) scale(0.5); pointer-events: none; }
+        #fabContainer.expanded .fab-plus { opacity: 0; transform: rotate(135deg) scale(0.3); pointer-events: none; }
 
         .fab-menu-content {
-            display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 12px; box-sizing: border-box;
-            opacity: 0; pointer-events: none; transform: scale(0.8) translateY(10px);
-            transition: opacity 0.2s, transform 0.4s var(--spring);
+            display: flex; flex-direction: column; gap: 7px; width: 100%; padding: 12px; box-sizing: border-box;
+            opacity: 0; pointer-events: none; transform: scale(0.82) translateY(12px);
+            transition: opacity 0.22s, transform 0.45s var(--spring-bounce);
         }
         
         #fabContainer.expanded .fab-menu-content { 
@@ -250,25 +312,34 @@
         }
 
         .fab-action-btn {
-            background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 12px; color: white;
-            display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500;
-            cursor: pointer; transition: background 0.2s, transform 0.1s; width: 100%;
+            background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 13px; color: white;
+            display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 500;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            cursor: pointer; 
+            opacity: 0; transform: translateX(-10px);
+            transition: background 0.2s, transform 0.35s var(--spring-bounce), opacity 0.25s; 
+            width: 100%;
         }
-        .fab-action-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.96); }
+        #fabContainer.expanded .fab-action-btn { opacity: 1; transform: translateX(0); }
+        #fabContainer.expanded .fab-action-btn:nth-child(1) { transition-delay: 0.06s; }
+        #fabContainer.expanded .fab-action-btn:nth-child(2) { transition-delay: 0.11s; }
+        #fabContainer.expanded .fab-action-btn:nth-child(3) { transition-delay: 0.16s; }
+
+        .fab-action-btn:active { background: rgba(255,255,255,0.22); transform: scale(0.93) !important; }
 
         /* =========================================
-           МОДАЛЬНОЕ ОКНО (МОРФИНГ)
+           МОДАЛЬНОЕ ОКНО (ДВУСТОРОННИЙ МОРФИНГ)
            ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
-            pointer-events: none; opacity: 0; transition: opacity 0.3s; 
+            pointer-events: none; opacity: 0; transition: opacity 0.35s var(--spring); 
         }
         
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.5); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
-            opacity: 0; transition: opacity 0.3s; 
+            background: rgba(0, 0, 0, 0.52); 
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); 
+            opacity: 0; transition: opacity 0.38s var(--spring); 
         }
         
         #modalContent {
@@ -276,16 +347,16 @@
             top: 10vh; bottom: 10vh; left: 20px; right: 20px;
             
             background: var(--glass);
-            backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
-            border-radius: 24px; 
+            backdrop-filter: blur(32px) saturate(160%); -webkit-backdrop-filter: blur(32px) saturate(160%);
+            border-radius: 26px; 
             border: 1px solid var(--glass-border);
             border-top: 1px solid var(--glass-highlight);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 28px 56px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.14);
             
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
             
             clip-path: inset(50% 50% 50% 50% round 16px); 
-            transition: clip-path 0.7s var(--spring);
+            transition: clip-path 0.68s var(--spring);
             will-change: clip-path;
             transform: translateZ(0);
         }
@@ -296,22 +367,23 @@
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
         .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
         .close-btn { 
-            background: rgba(255,255,255,0.1); border: none; color: var(--text); 
-            font-size: 18px; width: 30px; height: 30px; border-radius: 50%; 
-            cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background 0.2s;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.12); border: none; color: var(--text); 
+            font-size: 18px; width: 32px; height: 32px; border-radius: 50%; 
+            cursor: pointer; display: flex; justify-content: center; align-items: center; 
+            transition: background 0.2s, transform 0.3s var(--spring-bounce);
+            border-top: 1px solid rgba(255,255,255,0.22);
         }
-        .close-btn:active { background: rgba(255,255,255,0.2); }
+        .close-btn:active { background: rgba(255,255,255,0.25); transform: scale(0.84) rotate(90deg); }
         
         #modalInner {
             display: flex; flex-direction: column; height: 100%; min-height: 0;
-            opacity: 0; transform: scale(0.95);
-            transition: opacity 0.3s ease, transform 0.4s var(--spring);
+            opacity: 0; transform: scale(0.94) translateY(8px);
+            transition: opacity 0.28s ease, transform 0.42s var(--spring);
         }
         
         #expandedView.active #modalInner {
-            opacity: 1; transform: scale(1);
-            transition-delay: 0.15s;
+            opacity: 1; transform: scale(1) translateY(0);
+            transition-delay: 0.14s;
         }
 
         #measurementList { 
@@ -321,19 +393,27 @@
         #measurementList::-webkit-scrollbar { display: none; }
         
         .measurement-item { 
-            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 100%);
             border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
             padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-            flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+            animation: slideUpGlass 0.42s var(--spring) backwards;
+            transition: transform 0.28s var(--spring-bounce), background 0.2s;
+        }
+        .measurement-item:active {
+            transform: scale(0.97);
+            background: rgba(255,255,255,0.14);
         }
         .m-time { color: var(--text-secondary); font-size: 15px; font-weight: 500; }
         .m-value { font-size: 17px; font-weight: 600; }
 
         .chart-container { 
             flex: 1; position: relative; width: 100%; height: 100%; 
-            background: rgba(28, 28, 30, 0.6); border-radius: 20px; padding: 15px; 
-            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(28, 28, 30, 0.62); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-radius: 22px; padding: 15px; 
+            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.06);
+            border-top: 1px solid rgba(255,255,255,0.18);
         }
     </style>
 </head>
@@ -369,10 +449,10 @@
     <div id="dayView" class="view">
         <div class="header">
             <span>День</span>
-            <button class="refresh-glass-btn" onclick="loadData()">Обновить</button>
+            <button class="refresh-glass-btn" onclick="loadData(true)">Обновить</button>
         </div>
 
-        <div class="glass-card">
+        <div class="glass-card anim-stagger-1">
             <div class="card-header">
                 <span class="card-title">Последний выдох</span>
                 <span id="zoneBadge" class="glass-badge zone-green">Норма</span>
@@ -384,7 +464,7 @@
             <div id="lastTime" class="hero-meta">Загрузка данных...</div>
         </div>
 
-        <div class="stats-grid">
+        <div class="stats-grid anim-stagger-2">
             <div class="stat-box">
                 <div class="card-title">Лучший (норма)</div>
                 <div id="bestFlow" class="stat-num">400 <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">л/м</span></div>
@@ -395,7 +475,7 @@
             </div>
         </div>
 
-        <div class="glass-card">
+        <div class="glass-card anim-stagger-3">
             <div class="card-header">
                 <span class="card-title">Динамика ПСВ</span>
             </div>
@@ -409,8 +489,8 @@
             </div>
         </div>
 
-        <div class="section-label">Последние замеры</div>
-        <div id="dayHistoryList" class="day-list"></div>
+        <div class="section-label anim-stagger-4">Последние замеры</div>
+        <div id="dayHistoryList" class="day-list anim-stagger-4"></div>
     </div>
 
     <!-- FAB МЕНЮ -->
@@ -438,7 +518,10 @@
 
     <script>
         const tg = window.Telegram?.WebApp;
-        if (tg) tg.expand(); 
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
         const scriptUrl = "https://script.google.com/macros/s/AKfycbxh0Poo3SwCP1-2wyQtV5BfGbxvOTKG012sbCPbNlRe-ay82MaTmHbT1ComA1CXT3Wv_Q/exec";
         const PERSONAL_BEST = 400;
 
@@ -450,14 +533,25 @@
         let dayChartInstance = null;
         let dayRangeLimit = 7;
         let currentView = 'calendar';
+        let lastMorphInset = 'inset(50% 50% 50% 50% round 16px)';
 
-        const core = document.getElementById('core');
-        setInterval(() => {
-            const scale = 0.9 + Math.random() * 0.15;
-            const opacity = 0.5 + Math.random() * 0.2;
-            core.style.transform = `translate(-50%, -50%) scale(${scale})`;
-            core.style.opacity = opacity;
-        }, 3000);
+        function haptic(type = 'light') {
+            if (!tg?.HapticFeedback) return;
+            if (type === 'selection') tg.HapticFeedback.selectionChanged();
+            else tg.HapticFeedback.impactOccurred(type);
+        }
+
+        function animateValue(el, target, duration = 550) {
+            const start = 0;
+            const startTime = performance.now();
+            function step(now) {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 4);
+                el.innerText = Math.round(start + (target - start) * ease);
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
 
         function parseAnyDate(raw) {
             if (!raw) return null;
@@ -481,6 +575,7 @@
 
         function toggleFab(e) {
             if (e.target.id === 'fabContainer' || e.target.classList.contains('fab-plus')) {
+                haptic('light');
                 document.getElementById('fabContainer').classList.toggle('expanded');
             }
         }
@@ -496,6 +591,7 @@
             if(e) e.stopPropagation(); 
             document.getElementById('fabContainer').classList.remove('expanded');
             if (currentView === target) return;
+            haptic('selection');
 
             document.getElementById('calendarView').classList.remove('active');
             document.getElementById('graphView').classList.remove('active');
@@ -512,10 +608,12 @@
             } else {
                 document.getElementById('calendarView').classList.add('active');
                 currentView = 'calendar';
+                renderCalendar();
             }
         }
 
-        async function loadData() {
+        async function loadData(withHaptic = false) {
+            if (withHaptic) haptic('medium');
             document.getElementById('lastTime').innerText = 'Загрузка данных...';
             try {
                 const response = await fetch(scriptUrl + "?action=getData");
@@ -571,6 +669,8 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
+                // Каскадная анимация появления ячеек
+                cell.style.animationDelay = `${Math.min(day * 0.012, 0.35)}s`;
                 if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) cell.classList.add('today');
                 
                 const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
@@ -647,6 +747,7 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 750, easing: 'easeOutQuart' },
                     plugins: { legend: { display: true, labels: { color: '#8E8E93' } } },
                     scales: {
                         x: { ticks: { color: '#8E8E93', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 }, grid: { display: false } },
@@ -664,13 +765,14 @@
         }
 
         function setDayRange(limit, btn) {
+            haptic('selection');
             dayRangeLimit = limit;
             document.querySelectorAll('#dayView .glass-segmented button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            renderDayView();
+            renderDayView(false);
         }
 
-        function renderDayView() {
+        function renderDayView(withCounter = true) {
             const listEl = document.getElementById('dayHistoryList');
             if (!flatRecords.length) {
                 document.getElementById('lastFlow').innerText = '0';
@@ -682,8 +784,11 @@
 
             const latest = flatRecords[0];
             const zone = getZone(latest.flow);
+            const heroEl = document.getElementById('lastFlow');
 
-            document.getElementById('lastFlow').innerText = Math.round(latest.flow);
+            if (withCounter) animateValue(heroEl, Math.round(latest.flow), 600);
+            else heroEl.innerText = Math.round(latest.flow);
+
             document.getElementById('lastTime').innerText = latest.fullDate;
 
             const badge = document.getElementById('zoneBadge');
@@ -696,10 +801,10 @@
             document.getElementById('bestFlow').innerHTML = `${Math.round(bestVal)} <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">л/м</span>`;
             document.getElementById('avgFlow').innerHTML = `${avgVal} <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">л/м</span>`;
 
-            listEl.innerHTML = flatRecords.slice(0, 12).map(item => {
+            listEl.innerHTML = flatRecords.slice(0, 12).map((item, idx) => {
                 const z = getZone(item.flow);
                 return `
-                    <div class="measurement-item">
+                    <div class="measurement-item" style="animation-delay:${idx * 0.035}s">
                         <span class="m-time">🕒 ${item.fullDate}</span>
                         <span class="m-value" style="color:${z.color}">${Math.round(item.flow)} л/м</span>
                     </div>
@@ -717,17 +822,19 @@
                     datasets: [{
                         data: slice.map(r => r.flow),
                         borderColor: '#0A84FF',
-                        backgroundColor: 'rgba(10, 132, 255, 0.15)',
+                        backgroundColor: 'rgba(10, 132, 255, 0.16)',
                         borderWidth: 3,
                         pointRadius: 4,
+                        pointHoverRadius: 6,
                         pointBackgroundColor: slice.map(r => getZone(r.flow).color),
                         pointBorderColor: '#fff',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.42
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 650, easing: 'easeOutQuart' },
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { ticks: { color: '#8E8E93', font: { size: 10 } }, grid: { display: false } },
@@ -737,7 +844,9 @@
             });
         }
 
+        // --- ДВУСТОРОННЯЯ АНИМАЦИЯ МОРФИНГА ---
         function openModal(cellElement, day, measurements) {
+            haptic('light');
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
             
@@ -748,9 +857,10 @@
                 list.innerHTML = `<div style="text-align:center; color:#8E8E93; margin-top:20px; font-size:15px;">Нет данных</div>`;
             } else {
                 measurements.sort((a, b) => a.time.localeCompare(b.time));
-                measurements.forEach((m) => {
+                measurements.forEach((m, idx) => {
                     const item = document.createElement('div');
                     item.className = 'measurement-item';
+                    item.style.animationDelay = `${0.14 + idx * 0.04}s`;
                     const colorClass = m.flow <= 12 ? 'val-green' : 'val-blue';
                     item.innerHTML = `<span class="m-time">🕒 ${m.time}</span><span class="m-value ${colorClass}">${m.flow.toFixed(2)} л/м</span>`;
                     list.appendChild(item);
@@ -767,29 +877,36 @@
             const insetLeft = rect.left - modalRect.left;
             const insetRight = modalRect.right - rect.right;
             
+            lastMorphInset = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+
             modal.style.transition = 'none';
-            modal.style.clipPath = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+            modal.style.clipPath = lastMorphInset;
             
             view.classList.add('active');
             modal.offsetHeight; 
             
-            setTimeout(() => {
-                modal.style.transition = 'clip-path 0.7s var(--spring)';
-                modal.style.clipPath = `inset(0px 0px 0px 0px round 24px)`; 
-            }, 10);
+            requestAnimationFrame(() => {
+                modal.style.transition = 'clip-path 0.68s var(--spring)';
+                modal.style.clipPath = `inset(0px 0px 0px 0px round 26px)`; 
+            });
         }
 
         function closeExpandedView() {
-            document.getElementById('expandedView').classList.remove('active');
+            haptic('light');
+            const modal = document.getElementById('modalContent');
+            const view = document.getElementById('expandedView');
+            modal.style.transition = 'clip-path 0.52s var(--spring)';
+            modal.style.clipPath = lastMorphInset;
+            view.classList.remove('active');
         }
 
-        document.getElementById('prevBtn').addEventListener('click', () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); });
-        document.getElementById('nextBtn').addEventListener('click', () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); });
-        document.getElementById('prevMonthGraph').addEventListener('click', () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); renderMonthlyGraph(); });
-        document.getElementById('nextMonthGraph').addEventListener('click', () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); renderMonthlyGraph(); });
+        document.getElementById('prevBtn').addEventListener('click', () => { haptic('selection'); currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); });
+        document.getElementById('nextBtn').addEventListener('click', () => { haptic('selection'); currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); });
+        document.getElementById('prevMonthGraph').addEventListener('click', () => { haptic('selection'); currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); renderMonthlyGraph(); });
+        document.getElementById('nextMonthGraph').addEventListener('click', () => { haptic('selection'); currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); renderMonthlyGraph(); });
 
         loadData();
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.2) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.3) =================== -->
