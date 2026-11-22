@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.6 - ESP32 POINTS + SPARKLINES + DAY MODAL CHART) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.7 - EXPANDABLE BREATH INTENSITY CHART) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -71,10 +71,7 @@
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
             margin-bottom: 20px; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
-            flex-shrink: 0; gap: 8px;
-        }
-        .header-right-group {
-            display: flex; align-items: center; gap: 8px;
+            flex-shrink: 0;
         }
         .header button { 
             background: rgba(255,255,255,0.1);
@@ -83,16 +80,11 @@
             color: var(--text); font-size: 18px; width: 40px; height: 40px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             cursor: pointer; 
-            transition: background 0.2s, transform 0.32s var(--spring-bounce), border-color 0.2s;
+            transition: background 0.2s, transform 0.32s var(--spring-bounce);
         }
         .header button:active { 
             background: rgba(255,255,255,0.22); 
             transform: scale(0.86); 
-        }
-        .header button.toggle-active {
-            background: rgba(10, 132, 255, 0.28);
-            border-top: 1px solid rgba(10, 132, 255, 0.65);
-            color: var(--blue);
         }
 
         .header .refresh-glass-btn {
@@ -127,7 +119,7 @@
 
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            border-radius: 16px; position: relative; cursor: pointer; overflow: hidden;
+            border-radius: 16px; position: relative; cursor: pointer;
             
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 100%);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -151,33 +143,8 @@
             box-shadow: 0 6px 16px rgba(10, 132, 255, 0.25), inset 0 1px 2px rgba(255,255,255,0.22);
         }
         
-        .day-num { 
-            font-size: 17px; font-weight: 500; color: var(--text); z-index: 2;
-            transition: transform 0.28s var(--spring), font-size 0.28s var(--spring);
-        }
-        .day-val { 
-            font-size: 10px; font-weight: 600; position: absolute; bottom: 5px; z-index: 2;
-            transition: opacity 0.22s ease;
-        }
-
-        /* Режим спарклайнов в ячейках календаря */
-        .calendar.spark-mode .day-cell.has-spark .day-num {
-            font-size: 11px;
-            transform: translateY(-13px);
-            opacity: 0.85;
-        }
-        .calendar.spark-mode .day-cell.has-spark .day-val {
-            opacity: 0;
-        }
-        .cell-spark {
-            position: absolute; left: 4px; right: 4px; bottom: 4px; height: 22px;
-            opacity: 0; transform: scaleY(0.4); transform-origin: bottom;
-            transition: opacity 0.3s var(--spring), transform 0.38s var(--spring-bounce);
-            pointer-events: none; z-index: 1;
-        }
-        .calendar.spark-mode .cell-spark {
-            opacity: 1; transform: scaleY(1);
-        }
+        .day-num { font-size: 17px; font-weight: 500; color: var(--text); }
+        .day-val { font-size: 10px; font-weight: 600; position: absolute; bottom: 5px; }
         
         .val-green { color: var(--green); }
         .val-blue { color: var(--blue); }
@@ -217,6 +184,7 @@
         #dayView.active .anim-stagger-2 { animation: slideUpGlass 0.48s var(--spring) 0.07s backwards; }
         #dayView.active .anim-stagger-3 { animation: slideUpGlass 0.48s var(--spring) 0.12s backwards; }
         #dayView.active .anim-stagger-4 { animation: slideUpGlass 0.48s var(--spring) 0.17s backwards; }
+        #dayView.active .anim-stagger-5 { animation: slideUpGlass 0.48s var(--spring) 0.22s backwards; }
 
         .card-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -226,6 +194,10 @@
         .card-title {
             font-size: 12px; font-weight: 600; text-transform: uppercase;
             letter-spacing: 0.5px; color: var(--text-secondary);
+        }
+
+        .card-sub-hint {
+            font-size: 11px; color: var(--text-secondary); font-weight: 500;
         }
 
         .glass-badge {
@@ -308,6 +280,75 @@
         }
 
         /* =========================================
+           РАСКРЫВАЮЩАЯСЯ СТРОКА ЗАМЕРА (АККОРДЕОН С ГРАФИКОМ ИНТЕНСИВНОСТИ)
+           ========================================= */
+        .measurement-item { 
+            background: linear-gradient(145deg, rgba(32, 33, 36, 0.85) 0%, rgba(18, 19, 21, 0.92) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-top: 1px solid rgba(255, 255, 255, 0.16);
+            padding: 15px 16px; border-radius: 16px; display: flex; flex-direction: column;
+            flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.16);
+            cursor: pointer;
+            animation: slideUpGlass 0.38s var(--spring) backwards;
+            transition: transform 0.26s var(--spring-bounce), background 0.2s, border-color 0.25s;
+            will-change: transform;
+        }
+        .measurement-item:active {
+            transform: scale(0.975);
+        }
+        .measurement-item.open {
+            background: linear-gradient(145deg, rgba(38, 40, 46, 0.94) 0%, rgba(22, 23, 27, 0.96) 100%);
+            border-top: 1px solid rgba(10, 132, 255, 0.45);
+        }
+
+        .m-top-row {
+            display: flex; justify-content: space-between; align-items: center; width: 100%;
+        }
+        .m-right-wrap {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .m-chevron {
+            font-size: 11px; color: var(--text-secondary);
+            transition: transform 0.35s var(--spring-bounce), color 0.2s;
+        }
+        .measurement-item.open .m-chevron {
+            transform: rotate(180deg);
+            color: var(--blue);
+        }
+
+        .m-expand-body {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            margin-top: 0;
+            transition: grid-template-rows 0.42s var(--spring), opacity 0.28s ease, margin-top 0.35s var(--spring);
+        }
+        .measurement-item.open .m-expand-body {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            margin-top: 12px;
+        }
+        .m-expand-inner {
+            overflow: hidden;
+        }
+        .m-chart-box {
+            height: 120px;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 8px 10px 4px;
+            position: relative;
+        }
+        .m-chart-caption {
+            display: flex; justify-content: space-between;
+            font-size: 11px; color: var(--text-secondary);
+            margin-top: 6px; padding: 0 2px;
+        }
+
+        .m-time { color: var(--text-secondary); font-size: 15px; font-weight: 500; }
+        .m-value { font-size: 17px; font-weight: 600; }
+
+        /* =========================================
            FAB МЕНЮ СЛЕВА СНИЗУ
            ========================================= */
         #fabContainer {
@@ -368,7 +409,7 @@
         .fab-action-btn:active { background: rgba(255,255,255,0.22); transform: scale(0.93) !important; }
 
         /* =========================================
-           МОДАЛЬНОЕ ОКНО ДНЯ (МОРФИНГ + ГРАФИК ДНЯ)
+           МОДАЛЬНОЕ ОКНО ДНЯ (МОРФИНГ)
            ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
@@ -422,38 +463,11 @@
             transition-delay: 0.12s;
         }
 
-        /* График выдохов внутри модалки дня */
-        #modalChartBox {
-            height: 150px; flex-shrink: 0; margin-bottom: 12px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-top: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 18px; padding: 10px 12px;
-            display: none;
-        }
-
         #measurementList { 
             flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; 
             -webkit-overflow-scrolling: touch; scrollbar-width: none; 
         }
         #measurementList::-webkit-scrollbar { display: none; }
-        
-        .measurement-item { 
-            background: linear-gradient(145deg, rgba(32, 33, 36, 0.85) 0%, rgba(18, 19, 21, 0.92) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-top: 1px solid rgba(255, 255, 255, 0.16);
-            padding: 15px 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-            flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.16);
-            animation: slideUpGlass 0.38s var(--spring) backwards;
-            transition: transform 0.26s var(--spring-bounce), background 0.18s;
-            will-change: transform;
-        }
-        .measurement-item:active {
-            transform: scale(0.965);
-            background: rgba(45, 46, 50, 0.95);
-        }
-        .m-time { color: var(--text-secondary); font-size: 15px; font-weight: 500; }
-        .m-value { font-size: 17px; font-weight: 600; }
 
         .chart-container { 
             flex: 1; position: relative; width: 100%; height: 100%; 
@@ -467,15 +481,12 @@
 <body>
     <div id="core"></div>
 
-    <!-- КАЛЕНДАРЬ -->
+    <!-- КАЛЕНДАРЬ (ЧИСТАЯ ШАПКА БЕЗ КНОПКИ ГРАФИКА СПРАВА СВЕРХУ) -->
     <div id="calendarView" class="view active">
         <div class="header">
             <button id="prevBtn">&#8249;</button>
             <span id="monthTitle"></span>
-            <div class="header-right-group">
-                <button id="sparkToggleBtn" title="Графики в ячейках" onclick="toggleCalendarSparks()">📈</button>
-                <button id="nextBtn">&#8250;</button>
-            </div>
+            <button id="nextBtn">&#8250;</button>
         </div>
         <div class="weekdays">
             <div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div class="weekends">СБ</div><div class="weekends">ВС</div>
@@ -525,7 +536,19 @@
             </div>
         </div>
 
+        <!-- ГРАФИК ИНТЕНСИВНОСТИ ВЫБРАННОГО / ПОСЛЕДНЕГО ВЫДОХА -->
         <div class="glass-card anim-stagger-3">
+            <div class="card-header">
+                <span class="card-title">Интенсивность выдоха</span>
+                <span id="intensityMeta" class="card-sub-hint">Последний замер</span>
+            </div>
+            <div class="chart-wrap-day" style="height:135px">
+                <canvas id="intensityMainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- ДИНАМИКА ПИКОВ -->
+        <div class="glass-card anim-stagger-4">
             <div class="card-header">
                 <span class="card-title">Динамика ПСВ</span>
             </div>
@@ -540,8 +563,8 @@
             </div>
         </div>
 
-        <div class="section-label anim-stagger-4">Последние замеры</div>
-        <div id="dayHistoryList" class="day-list anim-stagger-4"></div>
+        <div class="section-label anim-stagger-5">Последние замеры (нажми для графика)</div>
+        <div id="dayHistoryList" class="day-list anim-stagger-5"></div>
     </div>
 
     <!-- FAB МЕНЮ -->
@@ -554,16 +577,13 @@
         </div>
     </div>
 
-    <!-- МОДАЛКА ДНЯ (С ГРАФИКОМ ЗА ДЕНЬ) -->
+    <!-- МОДАЛКА ДНЯ -->
     <div id="expandedView" onclick="closeExpandedView()">
         <div id="modalContent" onclick="event.stopPropagation()">
             <div id="modalInner">
                 <div class="expanded-header">
                     <div class="expanded-title" id="sheetDateTitle">Дата</div>
                     <button class="close-btn" onclick="closeExpandedView()">×</button>
-                </div>
-                <div id="modalChartBox">
-                    <canvas id="modalDayChart"></canvas>
                 </div>
                 <div id="measurementList"></div>
             </div>
@@ -585,10 +605,10 @@
         let flatRecords = [];
         let monthlyChartInstance = null;
         let dayChartInstance = null;
-        let modalDayChartInstance = null;
+        let intensityMainChartInstance = null;
+        let inlineCharts = {};
         let dayRangeLimit = 7;
         let currentView = 'calendar';
-        let sparkMode = false;
         let lastMorphInset = 'inset(50% 50% 50% 50% round 16px)';
 
         function haptic(type = 'light') {
@@ -630,34 +650,89 @@
             return null;
         }
 
-        function toggleCalendarSparks() {
-            haptic('selection');
-            sparkMode = !sparkMode;
-            const grid = document.getElementById('calendarGrid');
-            const btn = document.getElementById('sparkToggleBtn');
-            grid.classList.toggle('spark-mode', sparkMode);
-            btn.classList.toggle('toggle-active', sparkMode);
+        // Парсим массив точек выдоха с ESP32 (из 3-го столбца таблицы), либо строим плавную кривую по пику
+        function parsePoints(rawPoints, peakFlow) {
+            if (Array.isArray(rawPoints) && rawPoints.length >= 2) {
+                return rawPoints.map(Number).filter(n => !isNaN(n));
+            }
+            if (typeof rawPoints === 'string' && rawPoints.trim().startsWith('[')) {
+                try {
+                    const arr = JSON.parse(rawPoints);
+                    if (Array.isArray(arr) && arr.length >= 2) {
+                        return arr.map(Number).filter(n => !isNaN(n));
+                    }
+                } catch (e) {}
+            }
+            // Если это старый замер без массива точек — синтезируем реалистичный профиль выдоха до peakFlow
+            const p = Math.round(peakFlow);
+            return [
+                Math.round(p * 0.18),
+                Math.round(p * 0.62),
+                Math.round(p * 0.94),
+                p,
+                Math.round(p * 0.88),
+                Math.round(p * 0.72),
+                Math.round(p * 0.54),
+                Math.round(p * 0.36),
+                Math.round(p * 0.21),
+                Math.round(p * 0.08)
+            ];
         }
 
-        function buildSparkSvg(measurements, isToday) {
-            if (!measurements || measurements.length < 2) return '';
-            const sorted = [...measurements].sort((a, b) => a.time.localeCompare(b.time));
-            const vals = sorted.map(m => m.flow);
-            const minV = Math.min(...vals);
-            const maxV = Math.max(...vals);
-            const span = (maxV - minV) || 1;
-            const w = 100, h = 24, pad = 3;
+        function buildIntensityLabels(count) {
+            return Array.from({ length: count }, (_, i) => ((i * 0.05).toFixed(2) + 'с'));
+        }
 
-            const pts = vals.map((v, i) => {
-                const x = (i / (vals.length - 1)) * w;
-                const y = h - pad - ((v - minV) / span) * (h - pad * 2);
-                return `${x.toFixed(1)},${y.toFixed(1)}`;
-            }).join(' ');
+        function drawIntensityChart(canvasEl, points, color, existingChart = null) {
+            // Обрезаем хвостовые нули, если выдох закончился раньше 3 сек
+            let trimmed = [...points];
+            while (trimmed.length > 8 && trimmed[trimmed.length - 1] === 0 && trimmed[trimmed.length - 2] === 0) {
+                trimmed.pop();
+            }
+            const labels = buildIntensityLabels(trimmed.length);
 
-            const stroke = isToday ? '#FFFFFF' : '#30D158';
-            return `<svg class="cell-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-                <polyline fill="none" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="${pts}" />
-            </svg>`;
+            if (existingChart) {
+                existingChart.data.labels = labels;
+                existingChart.data.datasets[0].data = trimmed;
+                existingChart.data.datasets[0].borderColor = color;
+                existingChart.data.datasets[0].backgroundColor = color + '28';
+                existingChart.update();
+                return existingChart;
+            }
+
+            return new Chart(canvasEl.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: trimmed,
+                        borderColor: color,
+                        backgroundColor: color + '28',
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        pointHitRadius: 10,
+                        fill: true,
+                        tension: 0.42
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 480, easing: 'easeOutQuart' },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            ticks: { color: '#8E8E93', font: { size: 9 }, maxTicksLimit: 6 },
+                            grid: { display: false }
+                        },
+                        y: {
+                            min: 0,
+                            ticks: { color: '#8E8E93', font: { size: 10 }, maxTicksLimit: 4 },
+                            grid: { color: 'rgba(255,255,255,0.06)' }
+                        }
+                    }
+                }
+            });
         }
 
         function toggleFab(e) {
@@ -719,18 +794,19 @@
                 for (let i = 1; i < data.length; i++) {
                     const dateObj = parseAnyDate(data[i][0]); 
                     const flow = parseFloat(String(data[i][1]).replace(',', '.')); 
-                    // Фильтруем пустые строки и старые тестовые выбросы > 600
                     if (!dateObj || isNaN(flow) || flow <= 0 || flow > 600) continue; 
                     
+                    const points = parsePoints(data[i][2], flow);
                     const dateKey = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
                     const timeStr = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0') + ':' + String(dateObj.getSeconds()).padStart(2, '0');
                     const shortTime = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0');
                     const fullDate = String(dateObj.getDate()).padStart(2, '0') + '.' + String(dateObj.getMonth()+1).padStart(2, '0') + ' • ' + shortTime;
                     const hour = dateObj.getHours();
                     
+                    const rec = { ts: dateObj.getTime(), time: timeStr, fullDate: fullDate, shortTime: shortTime, flow: flow, hour: hour, points: points };
                     if (!allData[dateKey]) allData[dateKey] = [];
-                    allData[dateKey].push({ time: timeStr, shortTime: shortTime, flow: flow, hour: hour });
-                    flatRecords.push({ ts: dateObj.getTime(), fullDate: fullDate, shortTime: shortTime, flow: flow });
+                    allData[dateKey].push(rec);
+                    flatRecords.push(rec);
                 }
 
                 flatRecords.sort((a, b) => b.ts - a.ts);
@@ -750,7 +826,6 @@
             document.getElementById('monthTitleGraph').innerText = monthNames[currentMonth] + " " + currentYear;
             
             const grid = document.getElementById('calendarGrid');
-            grid.classList.toggle('spark-mode', sparkMode);
             grid.innerHTML = ''; 
             let firstDay = new Date(currentYear, currentMonth, 1).getDay();
             let startDay = firstDay === 0 ? 7 : firstDay; 
@@ -767,8 +842,7 @@
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
                 cell.style.animationDelay = `${Math.min(day * 0.01, 0.3)}s`;
-                const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
-                if (isToday) cell.classList.add('today');
+                if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) cell.classList.add('today');
                 
                 const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
                 const measurements = allData[dateKey] || [];
@@ -776,9 +850,7 @@
                 if (measurements.length > 0) {
                     const maxFlow = Math.max(...measurements.map(m => m.flow));
                     const colorClass = maxFlow <= 12 ? 'val-green' : 'val-blue';
-                    const sparkSvg = buildSparkSvg(measurements, isToday);
-                    if (sparkSvg) cell.classList.add('has-spark');
-                    cell.innerHTML = `<span class="day-num">${day}</span>${sparkSvg}<span class="day-val ${colorClass}">${Math.round(maxFlow)}</span>`;
+                    cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val ${colorClass}">${Math.round(maxFlow)}</span>`;
                 } else {
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
                 }
@@ -863,6 +935,61 @@
             return { label: 'Красная зона', cls: 'zone-red', color: '#FF453A' };
         }
 
+        // Создание раскрывающейся карточки замера с графиком интенсивности внутри
+        function createExpandableMeasurementCard(m, labelText, delaySec, uid, onSelectCallback = null) {
+            const z = getZone(m.flow);
+            const item = document.createElement('div');
+            item.className = 'measurement-item';
+            item.style.animationDelay = `${delaySec}s`;
+
+            const durationSec = (m.points.length * 0.05).toFixed(1);
+            item.innerHTML = `
+                <div class="m-top-row">
+                    <span class="m-time">🕒 ${labelText}</span>
+                    <div class="m-right-wrap">
+                        <span class="m-value" style="color:${z.color}">${Math.round(m.flow)} л/м</span>
+                        <span class="m-chevron">▾</span>
+                    </div>
+                </div>
+                <div class="m-expand-body">
+                    <div class="m-expand-inner">
+                        <div class="m-chart-box">
+                            <canvas id="canvas_${uid}"></canvas>
+                        </div>
+                        <div class="m-chart-caption">
+                            <span>Пик: ${Math.round(m.flow)} л/мин</span>
+                            <span>Длительность: ~${durationSec} с</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            item.addEventListener('click', () => {
+                haptic('selection');
+                const wasOpen = item.classList.contains('open');
+
+                // Закрываем остальные открытые карточки в этом списке
+                item.parentElement.querySelectorAll('.measurement-item.open').forEach(el => {
+                    el.classList.remove('open');
+                });
+
+                if (!wasOpen) {
+                    item.classList.add('open');
+                    const canvas = item.querySelector(`#canvas_${uid}`);
+                    if (inlineCharts[uid]) {
+                        inlineCharts[uid].destroy();
+                    }
+                    inlineCharts[uid] = drawIntensityChart(canvas, m.points, z.color);
+                }
+
+                if (onSelectCallback) {
+                    onSelectCallback(m);
+                }
+            });
+
+            return item;
+        }
+
         function setDayRange(limit, index, btn) {
             if (dayRangeLimit === limit) return;
             haptic('selection');
@@ -887,6 +1014,13 @@
                 dayChartInstance.data.datasets[0].pointBackgroundColor = colors;
                 dayChartInstance.update();
             }
+        }
+
+        function selectMainIntensityRecord(rec) {
+            const z = getZone(rec.flow);
+            document.getElementById('intensityMeta').innerText = `${rec.fullDate} • пик ${Math.round(rec.flow)} л/м`;
+            const canvas = document.getElementById('intensityMainChart');
+            intensityMainChartInstance = drawIntensityChart(canvas, rec.points, z.color, intensityMainChartInstance);
         }
 
         function renderDayView(withCounter = true) {
@@ -925,15 +1059,21 @@
             badge.className = 'glass-badge ' + zone.cls + ' pulse';
             setTimeout(() => badge.classList.remove('pulse'), 320);
 
-            listEl.innerHTML = flatRecords.slice(0, 12).map((item, idx) => {
-                const z = getZone(item.flow);
-                return `
-                    <div class="measurement-item" style="animation-delay:${Math.min(idx * 0.03, 0.35)}s">
-                        <span class="m-time">🕒 ${item.fullDate}</span>
-                        <span class="m-value" style="color:${z.color}">${Math.round(item.flow)} л/м</span>
-                    </div>
-                `;
-            }).join('');
+            // Верхний график интенсивности на вкладке "День"
+            selectMainIntensityRecord(latest);
+
+            // Список последних замеров с раскрывающимся графиком интенсивности по тапу
+            listEl.innerHTML = '';
+            flatRecords.slice(0, 12).forEach((item, idx) => {
+                const card = createExpandableMeasurementCard(
+                    item,
+                    item.fullDate,
+                    Math.min(idx * 0.03, 0.35),
+                    `day_${idx}`,
+                    (selectedRec) => selectMainIntensityRecord(selectedRec)
+                );
+                listEl.appendChild(card);
+            });
 
             const slice = flatRecords.slice(0, dayRangeLimit).reverse();
             const ctx = document.getElementById('dayChart').getContext('2d');
@@ -972,60 +1112,27 @@
             });
         }
 
-        // --- МОДАЛЬНОЕ ОКНО ДНЯ С ГРАФИКОМ ТОЧЕК ESP32 ЗА ДЕНЬ ---
+        // --- МОДАЛЬНОЕ ОКНО ДНЯ (ТАП ПО СТРОКЕ ОТКРЫВАЕТ ГРАФИК ИНТЕНСИВНОСТИ) ---
         function openModal(cellElement, day, measurements) {
             haptic('light');
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
             document.getElementById('sheetDateTitle').innerText = `${day} ${monthNames[currentMonth]}`;
             
             const list = document.getElementById('measurementList');
-            const chartBox = document.getElementById('modalChartBox');
             list.innerHTML = ''; 
             
             if (measurements.length === 0) {
-                chartBox.style.display = 'none';
                 list.innerHTML = `<div style="text-align:center; color:#8E8E93; margin-top:20px; font-size:15px;">Нет данных</div>`;
             } else {
                 const sorted = [...measurements].sort((a, b) => a.time.localeCompare(b.time));
-                
-                // Показываем и рисуем график точек за этот день
-                chartBox.style.display = 'block';
-                const ctx = document.getElementById('modalDayChart').getContext('2d');
-                if (modalDayChartInstance) modalDayChartInstance.destroy();
-                modalDayChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: sorted.map(m => m.shortTime || m.time.slice(0, 5)),
-                        datasets: [{
-                            data: sorted.map(m => m.flow),
-                            borderColor: '#0A84FF',
-                            backgroundColor: 'rgba(10, 132, 255, 0.16)',
-                            borderWidth: 2.5,
-                            pointRadius: 4,
-                            pointBackgroundColor: sorted.map(m => getZone(m.flow).color),
-                            pointBorderColor: '#fff',
-                            fill: true,
-                            tension: 0.38
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        animation: { duration: 480, easing: 'easeOutQuart' },
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { ticks: { color: '#8E8E93', font: { size: 10 } }, grid: { display: false } },
-                            y: { ticks: { color: '#8E8E93', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
-                        }
-                    }
-                });
-
                 sorted.forEach((m, idx) => {
-                    const item = document.createElement('div');
-                    item.className = 'measurement-item';
-                    item.style.animationDelay = `${0.12 + idx * 0.035}s`;
-                    const z = getZone(m.flow);
-                    item.innerHTML = `<span class="m-time">🕒 ${m.time}</span><span class="m-value" style="color:${z.color}">${Math.round(m.flow)} л/м</span>`;
-                    list.appendChild(item);
+                    const card = createExpandableMeasurementCard(
+                        m,
+                        m.time,
+                        0.12 + idx * 0.035,
+                        `modal_${day}_${idx}`
+                    );
+                    list.appendChild(card);
                 });
             }
 
@@ -1071,4 +1178,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.6) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.7) =================== -->
