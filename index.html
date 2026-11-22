@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 13.7 - EXPANDABLE BREATH INTENSITY CHART) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 14.0 - TRUE LIQUID GLASS & MORPHING) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -10,18 +10,15 @@
     
     <style>
         :root {
-            --bg: #050505;
+            --bg: #05060a;
             --text: #ffffff;
-            --text-secondary: #8E8E93;
+            --text-secondary: rgba(235, 235, 245, 0.6);
             --blue: #0A84FF;
             --green: #30D158;
             --orange: #FF9F0A;
             --red: #FF453A;
-            --glass: rgba(24, 24, 26, 0.9);
-            --glass-border: rgba(255, 255, 255, 0.14);
-            --glass-highlight: rgba(255, 255, 255, 0.25);
             --spring: cubic-bezier(0.32, 0.72, 0, 1);
-            --spring-bounce: cubic-bezier(0.34, 1.45, 0.64, 1);
+            --spring-liquid: cubic-bezier(0.22, 1.32, 0.36, 1);
         }
 
         body { 
@@ -31,40 +28,69 @@
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
         }
 
-        #core {
-            position: fixed; top: 50%; left: 50%; width: 380px; height: 380px;
-            background: radial-gradient(circle, rgba(10, 132, 255, 0.22) 0%, rgba(48, 209, 88, 0.05) 45%, rgba(0, 0, 0, 0) 72%);
-            border-radius: 50%;
-            z-index: 0; pointer-events: none;
-            animation: coreFloat 7s ease-in-out infinite alternate;
-            will-change: transform, opacity;
+        /* =========================================
+           ЖИДКИЙ СВЕТОВОЙ ФОН ДЛЯ ПРЕЛОМЛЕНИЯ СТЕКЛА
+           ========================================= */
+        .ambient-canvas {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .liquid-blob {
+            position: absolute; border-radius: 50%;
+            filter: blur(55px);
+            will-change: transform;
+        }
+        .blob-1 {
+            top: 12%; left: 10%; width: 320px; height: 320px;
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.42) 0%, rgba(10, 132, 255, 0) 70%);
+            animation: floatBlob1 11s ease-in-out infinite alternate;
+        }
+        .blob-2 {
+            top: 48%; right: 5%; width: 340px; height: 340px;
+            background: radial-gradient(circle, rgba(48, 209, 88, 0.32) 0%, rgba(48, 209, 88, 0) 70%);
+            animation: floatBlob2 13s ease-in-out infinite alternate;
+        }
+        .blob-3 {
+            bottom: 8%; left: 22%; width: 360px; height: 360px;
+            background: radial-gradient(circle, rgba(94, 92, 230, 0.36) 0%, rgba(94, 92, 230, 0) 70%);
+            animation: floatBlob3 15s ease-in-out infinite alternate;
         }
 
-        @keyframes coreFloat {
-            0% { transform: translate3d(-52%, -48%, 0) scale(0.92); opacity: 0.65; }
-            50% { transform: translate3d(-48%, -52%, 0) scale(1.08); opacity: 0.95; }
-            100% { transform: translate3d(-50%, -49%, 0) scale(0.96); opacity: 0.75; }
+        @keyframes floatBlob1 {
+            0% { transform: translate3d(-10%, -5%, 0) scale(0.95); }
+            100% { transform: translate3d(25%, 20%, 0) scale(1.18); }
+        }
+        @keyframes floatBlob2 {
+            0% { transform: translate3d(10%, -15%, 0) scale(1.1); }
+            100% { transform: translate3d(-25%, 18%, 0) scale(0.9); }
+        }
+        @keyframes floatBlob3 {
+            0% { transform: translate3d(-15%, 10%, 0) scale(1); }
+            100% { transform: translate3d(20%, -20%, 0) scale(1.15); }
         }
 
+        /* =========================================
+           МОРФИНГ ЭКРАНОВ
+           ========================================= */
         .view { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             opacity: 0; pointer-events: none; 
-            transform: translate3d(0, 16px, 0) scale(0.97);
-            transition: opacity 0.36s var(--spring), transform 0.48s var(--spring); 
+            transform: translate3d(0, 26px, 0) scale(0.9);
+            border-radius: 40px;
+            transition: opacity 0.4s var(--spring), transform 0.6s var(--spring-liquid), border-radius 0.55s var(--spring); 
             padding: 20px; box-sizing: border-box; z-index: 1;
             will-change: opacity, transform;
         }
         .view.active { 
             opacity: 1; pointer-events: auto; z-index: 10; 
             transform: translate3d(0, 0, 0) scale(1);
+            border-radius: 0px;
         }
 
         #dayView {
             overflow-y: auto;
-            padding-bottom: 110px;
+            padding-bottom: 115px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            contain: content;
         }
         #dayView::-webkit-scrollbar { display: none; }
 
@@ -74,27 +100,29 @@
             flex-shrink: 0;
         }
         .header button { 
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
-            color: var(--text); font-size: 18px; width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(145deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 100%);
+            backdrop-filter: blur(22px) saturate(190%); -webkit-backdrop-filter: blur(22px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -1px 2px rgba(255,255,255,0.1);
+            color: var(--text); font-size: 18px; width: 42px; height: 42px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             cursor: pointer; 
-            transition: background 0.2s, transform 0.32s var(--spring-bounce);
+            transition: background 0.2s, transform 0.38s var(--spring-liquid);
         }
         .header button:active { 
-            background: rgba(255,255,255,0.22); 
-            transform: scale(0.86); 
+            background: rgba(255,255,255,0.32); 
+            transform: scale(0.8); 
         }
 
         .header .refresh-glass-btn {
             width: auto; height: 36px; border-radius: 18px; padding: 0 14px;
-            font-size: 14px; font-weight: 500; color: var(--blue);
+            font-size: 14px; font-weight: 600; color: #64D2FF;
             display: inline-flex; align-items: center; gap: 6px;
         }
         .refresh-icon {
             display: inline-block;
-            transition: transform 0.6s var(--spring);
+            transition: transform 0.65s var(--spring-liquid);
         }
         .refresh-glass-btn.spinning .refresh-icon {
             transform: rotate(360deg);
@@ -102,89 +130,125 @@
 
         .weekdays { 
             display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
-            font-weight: 500; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px; 
+            font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); font-size: 12px; 
             flex-shrink: 0;
         }
         .weekends { color: var(--red); }
         
         .calendar { 
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; 
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; 
             align-content: start; 
         }
 
-        @keyframes popInCell {
-            0% { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.8); }
-            100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+        @keyframes liquidDropIn {
+            0% { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.68); border-radius: 28px; }
+            100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); border-radius: 18px; }
         }
 
+        /* =========================================
+           ЯЧЕЙКИ КАЛЕНДАРЯ — LIQUID GLASS КАПЛИ
+           ========================================= */
         .day-cell { 
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            border-radius: 16px; position: relative; cursor: pointer;
+            border-radius: 18px; position: relative; cursor: pointer; overflow: hidden;
             
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-top: 1px solid rgba(255, 255, 255, 0.22);
-            border-left: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.22), inset 0 1px 1px rgba(255,255,255,0.1);
+            background: linear-gradient(145deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.09) 100%);
+            backdrop-filter: blur(18px) saturate(185%); -webkit-backdrop-filter: blur(18px) saturate(185%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.45);
+            border-left: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 
+                0 8px 18px rgba(0,0,0,0.34),
+                inset 0 1px 1px rgba(255,255,255,0.35),
+                inset 0 -2px 6px rgba(255,255,255,0.08);
             
-            animation: popInCell 0.42s var(--spring-bounce) backwards;
-            transition: transform 0.28s var(--spring-bounce), background 0.18s;
+            animation: liquidDropIn 0.54s var(--spring-liquid) backwards;
+            transition: transform 0.36s var(--spring-liquid), border-radius 0.36s var(--spring), background 0.2s, box-shadow 0.28s;
             will-change: transform;
         }
+        /* Блик на верхней грани каждой капли */
+        .day-cell::after {
+            content: '';
+            position: absolute; top: 0; left: 16%; right: 16%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+            pointer-events: none;
+        }
         .day-cell:active { 
-            transform: scale(0.85); 
-            background: rgba(255,255,255,0.22); 
+            transform: scale(0.8); 
+            border-radius: 26px;
+            background: rgba(255,255,255,0.28); 
+            box-shadow: 0 0 26px rgba(10, 132, 255, 0.55), inset 0 1px 3px rgba(255,255,255,0.5);
+        }
+
+        /* Каустическая подсветка ячеек, где есть замеры */
+        .day-cell.has-data {
+            background: linear-gradient(145deg, rgba(255,255,255,0.2) 0%, rgba(48, 209, 88, 0.08) 55%, rgba(10, 132, 255, 0.12) 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.55);
         }
         
         .day-cell.today { 
-            background: linear-gradient(135deg, rgba(10, 132, 255, 0.36) 0%, rgba(10, 132, 255, 0.16) 100%); 
-            border-top: 1px solid rgba(10, 132, 255, 0.6);
-            border-left: 1px solid rgba(10, 132, 255, 0.38);
-            box-shadow: 0 6px 16px rgba(10, 132, 255, 0.25), inset 0 1px 2px rgba(255,255,255,0.22);
+            background: linear-gradient(145deg, rgba(10, 132, 255, 0.52) 0%, rgba(10, 132, 255, 0.2) 55%, rgba(94, 92, 230, 0.32) 100%); 
+            border-top: 1px solid rgba(180, 220, 255, 0.85);
+            border-left: 1px solid rgba(10, 132, 255, 0.55);
+            box-shadow: 0 10px 24px rgba(10, 132, 255, 0.4), inset 0 1px 2px rgba(255,255,255,0.45);
         }
         
-        .day-num { font-size: 17px; font-weight: 500; color: var(--text); }
-        .day-val { font-size: 10px; font-weight: 600; position: absolute; bottom: 5px; }
+        .day-num { font-size: 17px; font-weight: 600; color: var(--text); text-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+        .day-val { font-size: 10px; font-weight: 700; position: absolute; bottom: 5px; }
         
         .val-green { color: var(--green); }
-        .val-blue { color: var(--blue); }
-        .day-cell.today .day-val { color: rgba(255,255,255,0.95); }
+        .val-blue { color: #64D2FF; }
+        .day-cell.today .day-val { color: #ffffff; }
 
-        .empty-cell { background: transparent; border: none; box-shadow: none; cursor: default; animation: none; }
+        .empty-cell { background: transparent; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; cursor: default; animation: none; }
+        .empty-cell::after { display: none; }
         .empty-cell:active { transform: none; background: transparent; box-shadow: none; }
 
         /* =========================================
-           ЭКРАН "ДЕНЬ"
+           LIQUID GLASS КАРТОЧКИ НА ЭКРАНЕ "ДЕНЬ"
            ========================================= */
-        @keyframes slideUpGlass {
-            0% { opacity: 0; transform: translate3d(0, 22px, 0) scale(0.96); }
+        @keyframes liquidCardRise {
+            0% { opacity: 0; transform: translate3d(0, 28px, 0) scale(0.92); border-radius: 32px; }
             100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
         }
 
         .glass-card, .stat-box {
-            background: linear-gradient(145deg, rgba(32, 33, 36, 0.85) 0%, rgba(18, 19, 21, 0.92) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            border-left: 1px solid rgba(255, 255, 255, 0.11);
-            box-shadow: 0 8px 22px rgba(0,0,0,0.38), inset 0 1px 1px rgba(255,255,255,0.12);
-            transition: transform 0.32s var(--spring-bounce);
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.09) 100%);
+            backdrop-filter: blur(26px) saturate(190%); -webkit-backdrop-filter: blur(26px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-top: 1px solid rgba(255, 255, 255, 0.45);
+            border-left: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 
+                0 14px 34px rgba(0,0,0,0.45),
+                inset 0 1px 1px rgba(255,255,255,0.32),
+                inset 0 -3px 10px rgba(255,255,255,0.05);
+            transition: transform 0.36s var(--spring-liquid), border-radius 0.36s var(--spring);
             will-change: transform;
         }
+        .glass-card::before, .stat-box::before {
+            content: '';
+            position: absolute; top: 0; left: 12%; right: 12%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            pointer-events: none;
+        }
         .glass-card:active, .stat-box:active {
-            transform: scale(0.975);
+            transform: scale(0.965);
+            border-radius: 28px;
         }
 
         .glass-card {
-            border-radius: 22px;
+            border-radius: 24px;
             padding: 16px;
             margin-bottom: 14px;
         }
 
-        #dayView.active .anim-stagger-1 { animation: slideUpGlass 0.48s var(--spring) 0.02s backwards; }
-        #dayView.active .anim-stagger-2 { animation: slideUpGlass 0.48s var(--spring) 0.07s backwards; }
-        #dayView.active .anim-stagger-3 { animation: slideUpGlass 0.48s var(--spring) 0.12s backwards; }
-        #dayView.active .anim-stagger-4 { animation: slideUpGlass 0.48s var(--spring) 0.17s backwards; }
-        #dayView.active .anim-stagger-5 { animation: slideUpGlass 0.48s var(--spring) 0.22s backwards; }
+        #dayView.active .anim-stagger-1 { animation: liquidCardRise 0.56s var(--spring-liquid) 0.02s backwards; }
+        #dayView.active .anim-stagger-2 { animation: liquidCardRise 0.56s var(--spring-liquid) 0.07s backwards; }
+        #dayView.active .anim-stagger-3 { animation: liquidCardRise 0.56s var(--spring-liquid) 0.12s backwards; }
+        #dayView.active .anim-stagger-4 { animation: liquidCardRise 0.56s var(--spring-liquid) 0.17s backwards; }
+        #dayView.active .anim-stagger-5 { animation: liquidCardRise 0.56s var(--spring-liquid) 0.22s backwards; }
 
         .card-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -201,14 +265,15 @@
         }
 
         .glass-badge {
-            font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            transition: background 0.35s ease, color 0.35s ease, transform 0.38s var(--spring-bounce);
+            font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 999px;
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border-top: 1px solid rgba(255,255,255,0.42);
+            transition: background 0.35s ease, color 0.35s ease, transform 0.44s var(--spring-liquid);
         }
-        .glass-badge.pulse { transform: scale(1.08); }
-        .zone-green { background: rgba(48, 209, 88, 0.2); color: var(--green); }
-        .zone-orange { background: rgba(255, 159, 10, 0.2); color: var(--orange); }
-        .zone-red { background: rgba(255, 69, 58, 0.2); color: var(--red); }
+        .glass-badge.pulse { transform: scale(1.14); }
+        .zone-green { background: rgba(48, 209, 88, 0.26); color: var(--green); }
+        .zone-orange { background: rgba(255, 159, 10, 0.26); color: var(--orange); }
+        .zone-red { background: rgba(255, 69, 58, 0.26); color: var(--red); }
 
         .hero-row {
             display: flex; align-items: baseline; gap: 6px; margin: 4px 0 8px;
@@ -228,7 +293,7 @@
             display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
         }
         .stat-box {
-            border-radius: 18px;
+            border-radius: 20px;
             padding: 14px;
         }
         .stat-num {
@@ -239,9 +304,9 @@
         .glass-segmented {
             position: relative;
             display: flex;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 13px;
             padding: 3px;
             margin-bottom: 12px;
         }
@@ -249,21 +314,21 @@
             position: absolute;
             top: 3px; bottom: 3px; left: 3px;
             width: calc((100% - 6px) / 3);
-            background: rgba(255, 255, 255, 0.18);
-            border-top: 1px solid rgba(255, 255, 255, 0.28);
-            border-radius: 9px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.28);
-            transition: transform 0.38s var(--spring-bounce);
+            background: linear-gradient(145deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.14) 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.32), inset 0 1px 1px rgba(255,255,255,0.3);
+            transition: transform 0.44s var(--spring-liquid);
             will-change: transform;
             pointer-events: none;
         }
         .glass-segmented button {
             position: relative; z-index: 1;
             flex: 1; border: none; background: transparent; color: var(--text-secondary);
-            font-size: 12px; font-weight: 600; padding: 6px 0; border-radius: 9px;
-            cursor: pointer; transition: color 0.25s ease, transform 0.2s;
+            font-size: 12px; font-weight: 600; padding: 6px 0; border-radius: 10px;
+            cursor: pointer; transition: color 0.25s ease, transform 0.25s var(--spring-liquid);
         }
-        .glass-segmented button:active { transform: scale(0.93); }
+        .glass-segmented button:active { transform: scale(0.92); }
         .glass-segmented button.active { color: var(--text); }
 
         .chart-wrap-day {
@@ -271,8 +336,9 @@
         }
 
         .section-label {
+            display: flex; justify-content: space-between; align-items: center;
             font-size: 12px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.5px; color: var(--text-secondary); margin: 4px 0 8px 4px;
+            letter-spacing: 0.5px; color: var(--text-secondary); margin: 4px 4px 8px;
         }
 
         .day-list {
@@ -280,25 +346,27 @@
         }
 
         /* =========================================
-           РАСКРЫВАЮЩАЯСЯ СТРОКА ЗАМЕРА (АККОРДЕОН С ГРАФИКОМ ИНТЕНСИВНОСТИ)
+           МОРФИНГ-КАРТОЧКА ЗАМЕРА (АККОРДЕОН)
            ========================================= */
         .measurement-item { 
-            background: linear-gradient(145deg, rgba(32, 33, 36, 0.85) 0%, rgba(18, 19, 21, 0.92) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-top: 1px solid rgba(255, 255, 255, 0.16);
-            padding: 15px 16px; border-radius: 16px; display: flex; flex-direction: column;
-            flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.16);
+            background: linear-gradient(145deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0.08) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.09); 
+            border-top: 1px solid rgba(255, 255, 255, 0.34);
+            padding: 15px 16px; border-radius: 18px; display: flex; flex-direction: column;
+            flex-shrink: 0; box-shadow: 0 6px 16px rgba(0,0,0,0.28), inset 0 1px 1px rgba(255,255,255,0.2);
             cursor: pointer;
-            animation: slideUpGlass 0.38s var(--spring) backwards;
-            transition: transform 0.26s var(--spring-bounce), background 0.2s, border-color 0.25s;
+            animation: liquidCardRise 0.44s var(--spring-liquid) backwards;
+            transition: transform 0.34s var(--spring-liquid), border-radius 0.36s var(--spring), background 0.25s, border-color 0.25s;
             will-change: transform;
         }
         .measurement-item:active {
-            transform: scale(0.975);
+            transform: scale(0.96);
+            border-radius: 24px;
         }
         .measurement-item.open {
-            background: linear-gradient(145deg, rgba(38, 40, 46, 0.94) 0%, rgba(22, 23, 27, 0.96) 100%);
-            border-top: 1px solid rgba(10, 132, 255, 0.45);
+            background: linear-gradient(145deg, rgba(255,255,255,0.2) 0%, rgba(10, 132, 255, 0.12) 100%);
+            border-top: 1px solid rgba(130, 195, 255, 0.65);
+            border-radius: 24px;
         }
 
         .m-top-row {
@@ -309,34 +377,37 @@
         }
         .m-chevron {
             font-size: 11px; color: var(--text-secondary);
-            transition: transform 0.35s var(--spring-bounce), color 0.2s;
+            transition: transform 0.4s var(--spring-liquid), color 0.2s;
         }
         .measurement-item.open .m-chevron {
             transform: rotate(180deg);
-            color: var(--blue);
+            color: #64D2FF;
         }
 
         .m-expand-body {
-            display: grid;
-            grid-template-rows: 0fr;
+            max-height: 0;
             opacity: 0;
+            overflow: hidden;
             margin-top: 0;
-            transition: grid-template-rows 0.42s var(--spring), opacity 0.28s ease, margin-top 0.35s var(--spring);
+            transform: scale(0.94);
+            transform-origin: top center;
+            transition: max-height 0.48s var(--spring), opacity 0.32s ease, margin-top 0.38s var(--spring), transform 0.44s var(--spring-liquid);
         }
         .measurement-item.open .m-expand-body {
-            grid-template-rows: 1fr;
+            max-height: 185px;
             opacity: 1;
             margin-top: 12px;
-        }
-        .m-expand-inner {
-            overflow: hidden;
+            transform: scale(1);
         }
         .m-chart-box {
-            height: 120px;
-            background: rgba(255, 255, 255, 0.035);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
+            height: 130px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 14px;
             padding: 8px 10px 4px;
+            box-sizing: border-box;
             position: relative;
         }
         .m-chart-caption {
@@ -349,42 +420,42 @@
         .m-value { font-size: 17px; font-weight: 600; }
 
         /* =========================================
-           FAB МЕНЮ СЛЕВА СНИЗУ
+           ЖИДКИЙ FAB-МОРФИНГ СЛЕВА СНИЗУ
            ========================================= */
         #fabContainer {
             position: fixed; bottom: 30px; left: 20px;
             width: 56px; height: 56px;
-            background: rgba(34, 35, 38, 0.82);
-            backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-top: 1px solid rgba(255, 255, 255, 0.35);
-            box-shadow: 0 10px 32px rgba(0,0,0,0.45), inset 0 1px 1px rgba(255,255,255,0.2);
+            background: linear-gradient(145deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.07) 100%);
+            backdrop-filter: blur(28px) saturate(200%); -webkit-backdrop-filter: blur(28px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.55);
+            box-shadow: 0 14px 36px rgba(0,0,0,0.52), inset 0 1px 2px rgba(255,255,255,0.4);
             border-radius: 28px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: width 0.45s var(--spring-bounce), height 0.45s var(--spring-bounce), border-radius 0.42s var(--spring), background 0.25s, transform 0.25s var(--spring-bounce);
+            transition: width 0.52s var(--spring-liquid), height 0.52s var(--spring-liquid), border-radius 0.48s var(--spring), background 0.3s, transform 0.3s var(--spring-liquid);
             z-index: 500; overflow: hidden; cursor: pointer;
-            will-change: width, height, transform;
+            will-change: width, height, transform, border-radius;
         }
         
-        #fabContainer:not(.expanded):active { transform: scale(0.86); }
+        #fabContainer:not(.expanded):active { transform: scale(0.8); }
 
         #fabContainer.expanded {
-            width: 152px; height: 162px; border-radius: 26px;
-            background: rgba(28, 28, 30, 0.92);
-            box-shadow: 0 18px 44px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.22);
+            width: 156px; height: 166px; border-radius: 28px;
+            background: linear-gradient(145deg, rgba(40, 42, 48, 0.84) 0%, rgba(20, 22, 26, 0.9) 100%);
+            box-shadow: 0 24px 52px rgba(0,0,0,0.72), inset 0 1px 2px rgba(255,255,255,0.35);
             cursor: default;
         }
 
         .fab-plus { 
             position: absolute; font-size: 32px; font-weight: 300; color: white; 
-            transition: opacity 0.2s, transform 0.38s var(--spring-bounce); 
+            transition: opacity 0.22s, transform 0.44s var(--spring-liquid); 
         }
-        #fabContainer.expanded .fab-plus { opacity: 0; transform: rotate(135deg) scale(0.3); pointer-events: none; }
+        #fabContainer.expanded .fab-plus { opacity: 0; transform: rotate(135deg) scale(0.25); pointer-events: none; }
 
         .fab-menu-content {
             display: flex; flex-direction: column; gap: 7px; width: 100%; padding: 12px; box-sizing: border-box;
-            opacity: 0; pointer-events: none; transform: translate3d(0, 10px, 0) scale(0.86);
-            transition: opacity 0.2s, transform 0.42s var(--spring-bounce);
+            opacity: 0; pointer-events: none; transform: translate3d(0, 12px, 0) scale(0.84);
+            transition: opacity 0.22s, transform 0.46s var(--spring-liquid);
         }
         
         #fabContainer.expanded .fab-menu-content { 
@@ -393,48 +464,48 @@
         }
 
         .fab-action-btn {
-            background: rgba(255,255,255,0.08); border: none; padding: 10px 14px; border-radius: 13px; color: white;
+            background: rgba(255,255,255,0.1); border: none; padding: 10px 14px; border-radius: 14px; color: white;
             display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 500;
-            border-top: 1px solid rgba(255,255,255,0.12);
+            border-top: 1px solid rgba(255,255,255,0.22);
             cursor: pointer; 
-            opacity: 0; transform: translate3d(-10px, 0, 0);
-            transition: background 0.18s, transform 0.32s var(--spring-bounce), opacity 0.22s; 
+            opacity: 0; transform: translate3d(-12px, 0, 0) scale(0.94);
+            transition: background 0.18s, transform 0.36s var(--spring-liquid), opacity 0.24s; 
             width: 100%;
         }
-        #fabContainer.expanded .fab-action-btn { opacity: 1; transform: translate3d(0, 0, 0); }
+        #fabContainer.expanded .fab-action-btn { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
         #fabContainer.expanded .fab-action-btn:nth-child(1) { transition-delay: 0.05s; }
         #fabContainer.expanded .fab-action-btn:nth-child(2) { transition-delay: 0.09s; }
         #fabContainer.expanded .fab-action-btn:nth-child(3) { transition-delay: 0.13s; }
 
-        .fab-action-btn:active { background: rgba(255,255,255,0.22); transform: scale(0.93) !important; }
+        .fab-action-btn:active { background: rgba(255,255,255,0.26); transform: scale(0.92) !important; }
 
         /* =========================================
-           МОДАЛЬНОЕ ОКНО ДНЯ (МОРФИНГ)
+           МОДАЛЬНОЕ ОКНО ДНЯ (TRUE LIQUID MORPHING)
            ========================================= */
         #expandedView { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; 
-            pointer-events: none; opacity: 0; transition: opacity 0.32s var(--spring); 
+            pointer-events: none; opacity: 0; transition: opacity 0.36s var(--spring); 
         }
         
         #expandedView::before { 
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.58); 
-            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); 
-            opacity: 0; transition: opacity 0.35s var(--spring); 
+            background: rgba(0, 0, 0, 0.54); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+            opacity: 0; transition: opacity 0.38s var(--spring); 
         }
         
         #modalContent {
             position: absolute;
             top: 8vh; bottom: 8vh; left: 18px; right: 18px;
-            background: var(--glass);
-            backdrop-filter: blur(26px) saturate(150%); -webkit-backdrop-filter: blur(26px) saturate(150%);
-            border-radius: 26px; 
-            border: 1px solid var(--glass-border);
-            border-top: 1px solid var(--glass-highlight);
-            box-shadow: 0 28px 56px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.14);
+            background: linear-gradient(155deg, rgba(42, 44, 52, 0.72) 0%, rgba(18, 20, 26, 0.85) 100%);
+            backdrop-filter: blur(36px) saturate(200%); -webkit-backdrop-filter: blur(36px) saturate(200%);
+            border-radius: 30px; 
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 34px 68px rgba(0,0,0,0.72), inset 0 1px 1px rgba(255,255,255,0.3);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden;
-            clip-path: inset(50% 50% 50% 50% round 16px); 
-            transition: clip-path 0.62s var(--spring);
+            clip-path: inset(50% 50% 50% 50% round 18px); 
+            transition: clip-path 0.68s var(--spring);
             will-change: clip-path;
             transform: translateZ(0);
         }
@@ -445,18 +516,18 @@
         .expanded-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-shrink: 0; }
         .expanded-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
         .close-btn { 
-            background: rgba(255,255,255,0.12); border: none; color: var(--text); 
+            background: rgba(255,255,255,0.16); border: none; color: var(--text); 
             font-size: 18px; width: 32px; height: 32px; border-radius: 50%; 
             cursor: pointer; display: flex; justify-content: center; align-items: center; 
-            transition: background 0.2s, transform 0.3s var(--spring-bounce);
-            border-top: 1px solid rgba(255,255,255,0.22);
+            transition: background 0.2s, transform 0.34s var(--spring-liquid);
+            border-top: 1px solid rgba(255,255,255,0.34);
         }
-        .close-btn:active { background: rgba(255,255,255,0.25); transform: scale(0.84) rotate(90deg); }
+        .close-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.8) rotate(90deg); }
         
         #modalInner {
             display: flex; flex-direction: column; height: 100%; min-height: 0;
-            opacity: 0; transform: translate3d(0, 8px, 0) scale(0.95);
-            transition: opacity 0.25s ease, transform 0.38s var(--spring);
+            opacity: 0; transform: translate3d(0, 10px, 0) scale(0.94);
+            transition: opacity 0.28s ease, transform 0.44s var(--spring-liquid);
         }
         #expandedView.active #modalInner {
             opacity: 1; transform: translate3d(0, 0, 0) scale(1);
@@ -471,17 +542,23 @@
 
         .chart-container { 
             flex: 1; position: relative; width: 100%; height: 100%; 
-            background: rgba(24, 24, 26, 0.85);
-            border-radius: 22px; padding: 15px; 
-            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.06);
-            border-top: 1px solid rgba(255,255,255,0.18);
+            background: linear-gradient(145deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.03) 100%);
+            backdrop-filter: blur(24px) saturate(190%); -webkit-backdrop-filter: blur(24px) saturate(190%);
+            border-radius: 24px; padding: 15px; 
+            box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.34);
         }
     </style>
 </head>
 <body>
-    <div id="core"></div>
+    <!-- Живые переливающиеся световые пятна под стеклом -->
+    <div class="ambient-canvas">
+        <div class="liquid-blob blob-1"></div>
+        <div class="liquid-blob blob-2"></div>
+        <div class="liquid-blob blob-3"></div>
+    </div>
 
-    <!-- КАЛЕНДАРЬ (ЧИСТАЯ ШАПКА БЕЗ КНОПКИ ГРАФИКА СПРАВА СВЕРХУ) -->
+    <!-- КАЛЕНДАРЬ -->
     <div id="calendarView" class="view active">
         <div class="header">
             <button id="prevBtn">&#8249;</button>
@@ -522,7 +599,7 @@
                 <span id="lastFlow" class="hero-value">—</span>
                 <span class="hero-unit">л/мин</span>
             </div>
-            <div id="lastTime" class="hero-meta">Загрузка данных с ESP32...</div>
+            <div id="lastTime" class="hero-meta">Загрузка точек с ESP32...</div>
         </div>
 
         <div class="stats-grid anim-stagger-2">
@@ -536,18 +613,16 @@
             </div>
         </div>
 
-        <!-- ГРАФИК ИНТЕНСИВНОСТИ ВЫБРАННОГО / ПОСЛЕДНЕГО ВЫДОХА -->
         <div class="glass-card anim-stagger-3">
             <div class="card-header">
                 <span class="card-title">Интенсивность выдоха</span>
                 <span id="intensityMeta" class="card-sub-hint">Последний замер</span>
             </div>
-            <div class="chart-wrap-day" style="height:135px">
+            <div class="chart-wrap-day" style="height:140px">
                 <canvas id="intensityMainChart"></canvas>
             </div>
         </div>
 
-        <!-- ДИНАМИКА ПИКОВ -->
         <div class="glass-card anim-stagger-4">
             <div class="card-header">
                 <span class="card-title">Динамика ПСВ</span>
@@ -563,7 +638,10 @@
             </div>
         </div>
 
-        <div class="section-label anim-stagger-5">Последние замеры (нажми для графика)</div>
+        <div class="section-label anim-stagger-5">
+            <span>Все замеры</span>
+            <span id="totalRecordsCount" style="color:#64D2FF"></span>
+        </div>
         <div id="dayHistoryList" class="day-list anim-stagger-5"></div>
     </div>
 
@@ -609,7 +687,7 @@
         let inlineCharts = {};
         let dayRangeLimit = 7;
         let currentView = 'calendar';
-        let lastMorphInset = 'inset(50% 50% 50% 50% round 16px)';
+        let lastMorphInset = 'inset(50% 50% 50% 50% round 18px)';
 
         function haptic(type = 'light') {
             if (!tg?.HapticFeedback) return;
@@ -632,11 +710,10 @@
 
         function parseAnyDate(raw) {
             if (!raw) return null;
-            let d = new Date(raw);
-            if (!isNaN(d.getTime())) return d;
+            if (raw instanceof Date && !isNaN(raw.getTime())) return raw;
 
             const str = String(raw).trim();
-            const m = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[,\s]+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+            const m = str.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})(?:[,\sT]+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
             if (m) {
                 return new Date(
                     Number(m[3]),
@@ -647,55 +724,56 @@
                     Number(m[6] || 0)
                 );
             }
+
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) return d;
             return null;
         }
 
-        // Парсим массив точек выдоха с ESP32 (из 3-го столбца таблицы), либо строим плавную кривую по пику
         function parsePoints(rawPoints, peakFlow) {
             if (Array.isArray(rawPoints) && rawPoints.length >= 2) {
                 return rawPoints.map(Number).filter(n => !isNaN(n));
             }
-            if (typeof rawPoints === 'string' && rawPoints.trim().startsWith('[')) {
-                try {
-                    const arr = JSON.parse(rawPoints);
-                    if (Array.isArray(arr) && arr.length >= 2) {
-                        return arr.map(Number).filter(n => !isNaN(n));
-                    }
-                } catch (e) {}
+            if (typeof rawPoints === 'string') {
+                const trimmed = rawPoints.trim();
+                if (trimmed.startsWith('[')) {
+                    try {
+                        const arr = JSON.parse(trimmed);
+                        if (Array.isArray(arr) && arr.length >= 2) {
+                            return arr.map(Number).filter(n => !isNaN(n));
+                        }
+                    } catch (e) {}
+                }
             }
-            // Если это старый замер без массива точек — синтезируем реалистичный профиль выдоха до peakFlow
-            const p = Math.round(peakFlow);
-            return [
-                Math.round(p * 0.18),
-                Math.round(p * 0.62),
-                Math.round(p * 0.94),
-                p,
-                Math.round(p * 0.88),
-                Math.round(p * 0.72),
-                Math.round(p * 0.54),
-                Math.round(p * 0.36),
-                Math.round(p * 0.21),
-                Math.round(p * 0.08)
-            ];
+            const p = Number(peakFlow) || 0;
+            return [0, p * 0.45, p * 0.86, p, p * 0.82, p * 0.58, p * 0.34, p * 0.14, 0];
+        }
+
+        function getSampleStepSec(pointsLength) {
+            return pointsLength > 80 ? 0.01 : 0.05;
         }
 
         function buildIntensityLabels(count) {
-            return Array.from({ length: count }, (_, i) => ((i * 0.05).toFixed(2) + 'с'));
+            const dt = getSampleStepSec(count);
+            return Array.from({ length: count }, (_, i) => ((i * dt).toFixed(2) + 'с'));
         }
 
         function drawIntensityChart(canvasEl, points, color, existingChart = null) {
-            // Обрезаем хвостовые нули, если выдох закончился раньше 3 сек
+            if (!canvasEl) return null;
             let trimmed = [...points];
-            while (trimmed.length > 8 && trimmed[trimmed.length - 1] === 0 && trimmed[trimmed.length - 2] === 0) {
+            while (trimmed.length > 8 && trimmed[trimmed.length - 1] === 0 && trimmed[trimmed.length - 2] === 0 && trimmed[trimmed.length - 3] === 0) {
                 trimmed.pop();
             }
             const labels = buildIntensityLabels(trimmed.length);
+            const showDots = trimmed.length <= 70 ? 2 : 0;
 
             if (existingChart) {
                 existingChart.data.labels = labels;
                 existingChart.data.datasets[0].data = trimmed;
                 existingChart.data.datasets[0].borderColor = color;
-                existingChart.data.datasets[0].backgroundColor = color + '28';
+                existingChart.data.datasets[0].backgroundColor = color + '32';
+                existingChart.data.datasets[0].pointRadius = showDots;
+                existingChart.data.datasets[0].pointBackgroundColor = color;
                 existingChart.update();
                 return existingChart;
             }
@@ -707,12 +785,14 @@
                     datasets: [{
                         data: trimmed,
                         borderColor: color,
-                        backgroundColor: color + '28',
+                        backgroundColor: color + '32',
                         borderWidth: 2.5,
-                        pointRadius: 0,
-                        pointHitRadius: 10,
+                        pointRadius: showDots,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: color,
+                        pointBorderWidth: 0,
                         fill: true,
-                        tension: 0.42
+                        tension: 0.4
                     }]
                 },
                 options: {
@@ -722,13 +802,13 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         x: {
-                            ticks: { color: '#8E8E93', font: { size: 9 }, maxTicksLimit: 6 },
+                            ticks: { color: 'rgba(235,235,245,0.6)', font: { size: 9 }, maxTicksLimit: 6 },
                             grid: { display: false }
                         },
                         y: {
                             min: 0,
-                            ticks: { color: '#8E8E93', font: { size: 10 }, maxTicksLimit: 4 },
-                            grid: { color: 'rgba(255,255,255,0.06)' }
+                            ticks: { color: 'rgba(235,235,245,0.6)', font: { size: 10 }, maxTicksLimit: 4 },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
                         }
                     }
                 }
@@ -791,10 +871,10 @@
                 allData = {};
                 flatRecords = [];
 
-                for (let i = 1; i < data.length; i++) {
+                for (let i = 0; i < data.length; i++) {
                     const dateObj = parseAnyDate(data[i][0]); 
                     const flow = parseFloat(String(data[i][1]).replace(',', '.')); 
-                    if (!dateObj || isNaN(flow) || flow <= 0 || flow > 600) continue; 
+                    if (!dateObj || isNaN(flow) || flow <= 0) continue; 
                     
                     const points = parsePoints(data[i][2], flow);
                     const dateKey = dateObj.getFullYear() + '-' + String(dateObj.getMonth()+1).padStart(2, '0') + '-' + String(dateObj.getDate()).padStart(2, '0');
@@ -841,15 +921,16 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
-                cell.style.animationDelay = `${Math.min(day * 0.01, 0.3)}s`;
+                cell.style.animationDelay = `${Math.min(day * 0.011, 0.34)}s`;
                 if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) cell.classList.add('today');
                 
                 const dateKey = currentYear + '-' + String(currentMonth+1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
                 const measurements = allData[dateKey] || [];
                 
                 if (measurements.length > 0) {
+                    cell.classList.add('has-data');
                     const maxFlow = Math.max(...measurements.map(m => m.flow));
-                    const colorClass = maxFlow <= 12 ? 'val-green' : 'val-blue';
+                    const colorClass = maxFlow >= 320 ? 'val-green' : 'val-blue';
                     cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val ${colorClass}">${Math.round(maxFlow)}</span>`;
                 } else {
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
@@ -894,7 +975,7 @@
                             label: 'Утро',
                             data: morningData,
                             borderColor: '#30D158',
-                            backgroundColor: 'rgba(48, 209, 88, 0.1)',
+                            backgroundColor: 'rgba(48, 209, 88, 0.14)',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
                             pointBorderColor: '#30D158',
@@ -906,7 +987,7 @@
                             label: 'День/Вечер',
                             data: eveningData,
                             borderColor: '#0A84FF',
-                            backgroundColor: 'rgba(10, 132, 255, 0.1)',
+                            backgroundColor: 'rgba(10, 132, 255, 0.14)',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
                             pointBorderColor: '#0A84FF',
@@ -919,10 +1000,10 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     animation: { duration: 650, easing: 'easeOutQuart' },
-                    plugins: { legend: { display: true, labels: { color: '#8E8E93' } } },
+                    plugins: { legend: { display: true, labels: { color: 'rgba(235,235,245,0.75)' } } },
                     scales: {
-                        x: { ticks: { color: '#8E8E93', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 }, grid: { display: false } },
-                        y: { min: 0, max: 500, ticks: { color: '#8E8E93', stepSize: 50 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        x: { ticks: { color: 'rgba(235,235,245,0.6)', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 }, grid: { display: false } },
+                        y: { min: 0, max: 1000, ticks: { color: 'rgba(235,235,245,0.6)', stepSize: 50 }, grid: { color: 'rgba(255,255,255,0.08)' } }
                     }
                 }
             });
@@ -935,14 +1016,15 @@
             return { label: 'Красная зона', cls: 'zone-red', color: '#FF453A' };
         }
 
-        // Создание раскрывающейся карточки замера с графиком интенсивности внутри
         function createExpandableMeasurementCard(m, labelText, delaySec, uid, onSelectCallback = null) {
             const z = getZone(m.flow);
             const item = document.createElement('div');
             item.className = 'measurement-item';
             item.style.animationDelay = `${delaySec}s`;
 
-            const durationSec = (m.points.length * 0.05).toFixed(1);
+            const activePointsCount = m.points.filter(v => v > 0).length;
+            const dt = getSampleStepSec(m.points.length);
+            const durationSec = (activePointsCount * dt).toFixed(2);
             item.innerHTML = `
                 <div class="m-top-row">
                     <span class="m-time">🕒 ${labelText}</span>
@@ -952,14 +1034,12 @@
                     </div>
                 </div>
                 <div class="m-expand-body">
-                    <div class="m-expand-inner">
-                        <div class="m-chart-box">
-                            <canvas id="canvas_${uid}"></canvas>
-                        </div>
-                        <div class="m-chart-caption">
-                            <span>Пик: ${Math.round(m.flow)} л/мин</span>
-                            <span>Длительность: ~${durationSec} с</span>
-                        </div>
+                    <div class="m-chart-box">
+                        <canvas id="canvas_${uid}"></canvas>
+                    </div>
+                    <div class="m-chart-caption">
+                        <span>Точек выдоха: ${activePointsCount}</span>
+                        <span>Время выдоха: ${durationSec} с</span>
                     </div>
                 </div>
             `;
@@ -968,18 +1048,19 @@
                 haptic('selection');
                 const wasOpen = item.classList.contains('open');
 
-                // Закрываем остальные открытые карточки в этом списке
                 item.parentElement.querySelectorAll('.measurement-item.open').forEach(el => {
                     el.classList.remove('open');
                 });
 
                 if (!wasOpen) {
                     item.classList.add('open');
-                    const canvas = item.querySelector(`#canvas_${uid}`);
-                    if (inlineCharts[uid]) {
-                        inlineCharts[uid].destroy();
-                    }
-                    inlineCharts[uid] = drawIntensityChart(canvas, m.points, z.color);
+                    requestAnimationFrame(() => {
+                        const canvas = item.querySelector(`#canvas_${uid}`);
+                        if (inlineCharts[uid]) {
+                            inlineCharts[uid].destroy();
+                        }
+                        inlineCharts[uid] = drawIntensityChart(canvas, m.points, z.color);
+                    });
                 }
 
                 if (onSelectCallback) {
@@ -1025,11 +1106,13 @@
 
         function renderDayView(withCounter = true) {
             const listEl = document.getElementById('dayHistoryList');
+            document.getElementById('totalRecordsCount').innerText = flatRecords.length ? `${flatRecords.length} шт.` : '';
+
             if (!flatRecords.length) {
                 document.getElementById('lastFlow').innerText = '0';
                 document.getElementById('lastTime').innerText = 'Замеров в таблице пока нет';
                 document.getElementById('avgFlowNum').innerText = '0';
-                listEl.innerHTML = `<div style="text-align:center; color:#8E8E93; padding:16px; font-size:14px;">Нет данных</div>`;
+                listEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:16px; font-size:14px;">Нет данных</div>`;
                 return;
             }
 
@@ -1059,16 +1142,14 @@
             badge.className = 'glass-badge ' + zone.cls + ' pulse';
             setTimeout(() => badge.classList.remove('pulse'), 320);
 
-            // Верхний график интенсивности на вкладке "День"
             selectMainIntensityRecord(latest);
 
-            // Список последних замеров с раскрывающимся графиком интенсивности по тапу
             listEl.innerHTML = '';
-            flatRecords.slice(0, 12).forEach((item, idx) => {
+            flatRecords.forEach((item, idx) => {
                 const card = createExpandableMeasurementCard(
                     item,
                     item.fullDate,
-                    Math.min(idx * 0.03, 0.35),
+                    Math.min(idx * 0.025, 0.35),
                     `day_${idx}`,
                     (selectedRec) => selectMainIntensityRecord(selectedRec)
                 );
@@ -1090,7 +1171,7 @@
                     datasets: [{
                         data: slice.map(r => r.flow),
                         borderColor: '#0A84FF',
-                        backgroundColor: 'rgba(10, 132, 255, 0.16)',
+                        backgroundColor: 'rgba(10, 132, 255, 0.2)',
                         borderWidth: 3,
                         pointRadius: 4,
                         pointHoverRadius: 6,
@@ -1105,14 +1186,13 @@
                     animation: { duration: 550, easing: 'easeOutQuart' },
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { ticks: { color: '#8E8E93', font: { size: 10 } }, grid: { display: false } },
-                        y: { ticks: { color: '#8E8E93', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                        x: { ticks: { color: 'rgba(235,235,245,0.6)', font: { size: 10 } }, grid: { display: false } },
+                        y: { ticks: { color: 'rgba(235,235,245,0.6)', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.08)' } }
                     }
                 }
             });
         }
 
-        // --- МОДАЛЬНОЕ ОКНО ДНЯ (ТАП ПО СТРОКЕ ОТКРЫВАЕТ ГРАФИК ИНТЕНСИВНОСТИ) ---
         function openModal(cellElement, day, measurements) {
             haptic('light');
             const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
@@ -1122,14 +1202,14 @@
             list.innerHTML = ''; 
             
             if (measurements.length === 0) {
-                list.innerHTML = `<div style="text-align:center; color:#8E8E93; margin-top:20px; font-size:15px;">Нет данных</div>`;
+                list.innerHTML = `<div style="text-align:center; color:var(--text-secondary); margin-top:20px; font-size:15px;">Нет данных</div>`;
             } else {
                 const sorted = [...measurements].sort((a, b) => a.time.localeCompare(b.time));
                 sorted.forEach((m, idx) => {
                     const card = createExpandableMeasurementCard(
                         m,
                         m.time,
-                        0.12 + idx * 0.035,
+                        0.12 + idx * 0.03,
                         `modal_${day}_${idx}`
                     );
                     list.appendChild(card);
@@ -1146,7 +1226,7 @@
             const insetLeft = rect.left - modalRect.left;
             const insetRight = modalRect.right - rect.right;
             
-            lastMorphInset = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 16px)`;
+            lastMorphInset = `inset(${insetTop}px ${insetRight}px ${insetBottom}px ${insetLeft}px round 18px)`;
 
             modal.style.transition = 'none';
             modal.style.clipPath = lastMorphInset;
@@ -1155,8 +1235,8 @@
             modal.offsetHeight; 
             
             requestAnimationFrame(() => {
-                modal.style.transition = 'clip-path 0.62s var(--spring)';
-                modal.style.clipPath = `inset(0px 0px 0px 0px round 26px)`; 
+                modal.style.transition = 'clip-path 0.68s var(--spring)';
+                modal.style.clipPath = `inset(0px 0px 0px 0px round 30px)`; 
             });
         }
 
@@ -1164,7 +1244,7 @@
             haptic('light');
             const modal = document.getElementById('modalContent');
             const view = document.getElementById('expandedView');
-            modal.style.transition = 'clip-path 0.48s var(--spring)';
+            modal.style.transition = 'clip-path 0.5s var(--spring)';
             modal.style.clipPath = lastMorphInset;
             view.classList.remove('active');
         }
@@ -1178,4 +1258,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 13.7) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 14.0) =================== -->
