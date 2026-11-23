@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.2 - iQOO Z11 TURBO 144Hz / ADRENO 829 MAX PERF) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.7 - CLEAR GRAPH POINTS + GLOBAL ASTHMA STATE SYNC) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -32,7 +32,6 @@
             -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; 
         }
 
-        /* Невидимый 144Hz тикер против сброса частоты LTPO в OriginOS */
         #hzAnchor {
             position: fixed; top: 0; left: 0; width: 1px; height: 1px;
             opacity: 0.01; pointer-events: none; z-index: -1;
@@ -186,6 +185,26 @@
                 rgba(24, 30, 38, 0.74);
             border-color: rgba(255, 255, 255, 0.16);
         }
+
+        /* Индикатор дня с отдышкой на ячейке календаря */
+        .day-cell.has-dyspnea {
+            border-color: rgba(255, 69, 58, 0.45);
+        }
+        .day-dyspnea-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 8px var(--red);
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+        }
+        .day-cell.morphing-cell.is-open .day-dyspnea-dot {
+            opacity: 0;
+        }
         
         .day-cell.today { 
             background: 
@@ -306,10 +325,27 @@
             box-shadow: 
                 0 16px 34px rgba(0, 0, 0, 0.44),
                 inset 0 2px 18px rgba(255, 255, 255, 0.1);
-            transition: transform 0.32s var(--spring-gooey);
+            transition: transform 0.32s var(--spring-gooey), background 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease;
         }
-        .glass-card:active, .stat-box:active {
+        .glass-card:not(.hero-card):active, .stat-box:active {
             transform: scale3d(0.97, 0.97, 1);
+        }
+
+        .hero-card.state-dyspnea {
+            background: 
+                radial-gradient(140% 100% at 20% 0%, rgba(255, 69, 58, 0.36) 0%, rgba(255, 69, 58, 0.08) 58%, transparent 100%),
+                radial-gradient(120% 80% at 90% 100%, rgba(255, 159, 10, 0.16) 0%, transparent 65%),
+                rgba(38, 18, 22, 0.82);
+            border-color: rgba(255, 95, 85, 0.36);
+            box-shadow: 0 18px 38px rgba(255, 69, 58, 0.18), inset 0 2px 18px rgba(255, 130, 120, 0.14);
+        }
+        .hero-card.state-normal {
+            background: 
+                radial-gradient(140% 100% at 20% 0%, rgba(48, 209, 88, 0.32) 0%, rgba(48, 209, 88, 0.06) 58%, transparent 100%),
+                radial-gradient(120% 80% at 90% 100%, rgba(10, 132, 255, 0.14) 0%, transparent 65%),
+                rgba(18, 34, 26, 0.8);
+            border-color: rgba(48, 209, 88, 0.34);
+            box-shadow: 0 18px 38px rgba(48, 209, 88, 0.15), inset 0 2px 18px rgba(120, 255, 160, 0.14);
         }
 
         .glass-card {
@@ -358,8 +394,121 @@
         .hero-unit {
             font-size: 16px; font-weight: 500; color: var(--text-secondary);
         }
+        .hero-footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 32px;
+        }
         .hero-meta {
             font-size: 13px; color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .asthma-morph-pill {
+            position: relative;
+            height: 32px;
+            min-width: 96px;
+            border-radius: 999px;
+            background: 
+                radial-gradient(135% 100% at 28% 12%, rgba(255, 69, 58, 0.28) 0%, rgba(255, 159, 10, 0.08) 70%),
+                rgba(38, 24, 28, 0.78);
+            border: 1px solid rgba(255, 95, 85, 0.32);
+            box-shadow: 0 6px 16px rgba(255, 69, 58, 0.18), inset 0 1px 10px rgba(255, 255, 255, 0.16);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+            transition: width 0.42s var(--spring-gooey), height 0.42s var(--spring-gooey), border-radius 0.38s var(--spring), background 0.25s, border-color 0.25s, transform 0.28s var(--spring-gooey);
+            will-change: transform;
+        }
+        .asthma-morph-pill:not(.expanded):active {
+            transform: scale3d(0.88, 0.88, 1);
+        }
+        .asthma-morph-pill.logged {
+            background: 
+                radial-gradient(135% 100% at 28% 12%, rgba(255, 69, 58, 0.44) 0%, rgba(255, 69, 58, 0.14) 70%),
+                rgba(52, 22, 26, 0.88);
+            border-color: rgba(255, 105, 97, 0.55);
+            box-shadow: 0 6px 20px rgba(255, 69, 58, 0.34), inset 0 1px 10px rgba(255, 255, 255, 0.22);
+        }
+        .asthma-morph-pill.normal-state {
+            background: 
+                radial-gradient(135% 100% at 28% 12%, rgba(48, 209, 88, 0.28) 0%, rgba(48, 209, 88, 0.08) 70%),
+                rgba(22, 38, 28, 0.82);
+            border-color: rgba(48, 209, 88, 0.42);
+            box-shadow: 0 6px 16px rgba(48, 209, 88, 0.18), inset 0 1px 10px rgba(255, 255, 255, 0.18);
+        }
+        .asthma-morph-pill.expanded {
+            height: 36px;
+            border-radius: 18px;
+            background: 
+                radial-gradient(135% 100% at 28% 12%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 69, 58, 0.1) 70%),
+                rgba(26, 28, 36, 0.94);
+            border-color: rgba(255, 255, 255, 0.22);
+            cursor: default;
+        }
+        .asthma-pill-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 13px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #FF6961;
+            white-space: nowrap;
+            transition: opacity 0.16s ease, transform 0.3s var(--spring);
+        }
+        .asthma-morph-pill.logged .asthma-pill-label {
+            color: #ffffff;
+        }
+        .asthma-morph-pill.normal-state .asthma-pill-label {
+            color: var(--green);
+        }
+        .asthma-morph-pill.expanded .asthma-pill-label {
+            opacity: 0;
+            transform: scale3d(0.75, 0.75, 1);
+            pointer-events: none;
+            position: absolute;
+        }
+        .asthma-options {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            padding: 3px;
+            opacity: 0;
+            transform: scale3d(0.86, 0.86, 1);
+            transition: opacity 0.18s ease, transform 0.32s var(--spring-gooey);
+        }
+        .asthma-morph-pill.expanded .asthma-options {
+            display: inline-flex;
+            opacity: 1;
+            transform: scale3d(1, 1, 1);
+        }
+        .asthma-opt-btn {
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 9px;
+            border-radius: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: inset 0 1px 6px rgba(255,255,255,0.1);
+            transition: background 0.15s, transform 0.25s var(--spring-gooey);
+        }
+        .asthma-opt-btn:active {
+            transform: scale3d(0.88, 0.88, 1);
+        }
+        .asthma-opt-btn.danger {
+            background: rgba(255, 69, 58, 0.26);
+            color: #FF8A80;
+        }
+        .asthma-opt-btn.normal {
+            background: rgba(48, 209, 88, 0.22);
+            color: #6EE787;
         }
 
         .stats-grid {
@@ -443,6 +592,23 @@
         .m-top-row {
             display: flex; justify-content: space-between; align-items: center; width: 100%;
             pointer-events: none;
+        }
+        .m-left-wrap {
+            display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+        }
+        .m-state-tag {
+            font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+            white-space: nowrap;
+        }
+        .m-state-tag.dyspnea {
+            background: rgba(255, 69, 58, 0.22);
+            color: #FF8A80;
+            border: 1px solid rgba(255, 69, 58, 0.32);
+        }
+        .m-state-tag.normal {
+            background: rgba(48, 209, 88, 0.18);
+            color: #6EE787;
+            border: 1px solid rgba(48, 209, 88, 0.28);
         }
         .m-right-wrap {
             display: flex; align-items: center; gap: 8px;
@@ -603,7 +769,7 @@
             <button id="refreshDayBtn" class="refresh-glass-btn" onclick="loadData(true)"><span class="refresh-icon">↻</span> Обновить</button>
         </div>
 
-        <div class="glass-card anim-stagger-1">
+        <div id="heroCard" class="glass-card hero-card anim-stagger-1">
             <div class="card-header">
                 <span class="card-title">Последний выдох</span>
                 <span id="zoneBadge" class="glass-badge zone-green">Норма</span>
@@ -612,7 +778,16 @@
                 <span id="lastFlow" class="hero-value">—</span>
                 <span class="hero-unit">л/мин</span>
             </div>
-            <div id="lastTime" class="hero-meta">Загрузка точек с ESP32...</div>
+            <div class="hero-footer-row">
+                <div id="lastTime" class="hero-meta">Загрузка точек с ESP32...</div>
+                <div id="asthmaMorphPill" class="asthma-morph-pill" onclick="toggleAsthmaPill(event)">
+                    <span id="asthmaPillLabel" class="asthma-pill-label">Отдышка</span>
+                    <div class="asthma-options">
+                        <button type="button" class="asthma-opt-btn danger" onclick="logAsthmaEvent('Отдышка', event)">Отдышка</button>
+                        <button type="button" class="asthma-opt-btn normal" onclick="logAsthmaEvent('Нормальное состояние', event)">Нормальное состояние</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="stats-grid anim-stagger-2">
@@ -677,7 +852,6 @@
             tg.expand();
         }
 
-        // Удержание 144Hz LTPO дисплея iQOO Z11 Turbo без сброса в 60Hz
         (function lock144Hz() {
             const anchor = document.getElementById('hzAnchor');
             if (!anchor) return;
@@ -690,7 +864,6 @@
             requestAnimationFrame(tick);
         })();
 
-        // Оптимизация Chart.js под Adreno 829 + 1.5K экран (DPR <= 2, без лишнего overhead)
         if (window.Chart) {
             Chart.defaults.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
             Chart.defaults.elements.point.hitRadius = 10;
@@ -722,6 +895,109 @@
             if (!tg?.HapticFeedback) return;
             if (type === 'selection') tg.HapticFeedback.selectionChanged();
             else tg.HapticFeedback.impactOccurred(type);
+        }
+
+        function getSavedStatesMap() {
+            try {
+                return JSON.parse(localStorage.getItem('exhaleStates') || '{}');
+            } catch (err) {
+                return {};
+            }
+        }
+
+        function saveStateLocally(ts, symptom, time) {
+            try {
+                const map = getSavedStatesMap();
+                map[String(ts)] = { symptom, time };
+                localStorage.setItem('exhaleStates', JSON.stringify(map));
+            } catch (err) {}
+        }
+
+        function toggleAsthmaPill(e) {
+            e.stopPropagation();
+            const pill = document.getElementById('asthmaMorphPill');
+            if (!pill.classList.contains('expanded')) {
+                haptic('light');
+                pill.classList.add('expanded');
+            }
+        }
+
+        function applyAsthmaStateVisual(symptom, exhaleTime) {
+            const pill = document.getElementById('asthmaMorphPill');
+            const label = document.getElementById('asthmaPillLabel');
+            const card = document.getElementById('heroCard');
+            if (!pill || !label || !card) return;
+
+            pill.classList.remove('expanded', 'logged', 'normal-state');
+            card.classList.remove('state-dyspnea', 'state-normal');
+
+            if (!symptom) {
+                label.innerText = 'Отдышка';
+                return;
+            }
+
+            const suffix = exhaleTime ? ` • ${exhaleTime}` : '';
+            if (symptom === 'Нормальное состояние') {
+                pill.classList.add('normal-state');
+                card.classList.add('state-normal');
+                label.innerText = `Нормальное состояние${suffix}`;
+            } else {
+                pill.classList.add('logged');
+                card.classList.add('state-dyspnea');
+                label.innerText = `Отдышка${suffix}`;
+            }
+        }
+
+        function logAsthmaEvent(symptom, e) {
+            if (e) e.stopPropagation();
+            haptic('medium');
+            const latest = flatRecords.length ? flatRecords[0] : null;
+            const exhaleTime = latest ? latest.shortTime : '';
+            const currentPeak = latest ? Math.round(latest.flow) : 0;
+            const recordKey = latest ? String(latest.ts) : 'latest';
+
+            if (latest) {
+                latest.symptom = symptom;
+            }
+
+            applyAsthmaStateVisual(symptom, exhaleTime);
+            saveStateLocally(recordKey, symptom, exhaleTime);
+
+            // Обновляем отображение везде (список замеров, календарь, месячный график)
+            renderCalendar();
+            if (currentView === 'graph') renderMonthlyGraph();
+            renderDayHistoryListOnly();
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'asthma',
+                    symptom: symptom,
+                    flow: currentPeak,
+                    time: exhaleTime
+                })
+            }).catch(() => {});
+        }
+
+        function syncHeroAsthmaState(rec) {
+            if (!rec) {
+                applyAsthmaStateVisual(null, '');
+                return;
+            }
+            if (rec.symptom) {
+                applyAsthmaStateVisual(rec.symptom, rec.shortTime);
+                return;
+            }
+            const map = getSavedStatesMap();
+            const saved = map[String(rec.ts)];
+            if (saved && saved.symptom) {
+                rec.symptom = saved.symptom;
+                applyAsthmaStateVisual(saved.symptom, rec.shortTime);
+            } else {
+                applyAsthmaStateVisual(null, '');
+            }
         }
 
         function animateValue(el, target, duration = 420) {
@@ -871,6 +1147,10 @@
             if (fab.classList.contains('expanded') && !fab.contains(event.target)) {
                 fab.classList.remove('expanded');
             }
+            const pill = document.getElementById('asthmaMorphPill');
+            if (pill && pill.classList.contains('expanded') && !pill.contains(event.target)) {
+                pill.classList.remove('expanded');
+            }
         }, { passive: true });
 
         function switchToView(target, e) {
@@ -927,6 +1207,7 @@
             try {
                 const response = await fetch(scriptUrl + "?action=getData");
                 const data = await response.json();
+                const localMap = getSavedStatesMap();
                 allData = {};
                 flatRecords = [];
 
@@ -943,12 +1224,21 @@
                     const mm = String(dateObj.getMinutes()).padStart(2, '0');
                     const ss = String(dateObj.getSeconds()).padStart(2, '0');
 
+                    const ts = dateObj.getTime();
                     const dateKey = `${y}-${m}-${d}`;
                     const timeStr = `${hh}:${mm}:${ss}`;
                     const shortTime = `${hh}:${mm}`;
                     const fullDate = `${d}.${m} • ${shortTime}`;
+
+                    // Берём состояние из 4-го столбца Google Таблицы или из локального кэша
+                    const sheetState = data[i][3] ? String(data[i][3]).trim() : '';
+                    const localState = localMap[String(ts)]?.symptom || '';
+                    const symptom = sheetState || localState || '';
+                    if (symptom && !localState) {
+                        saveStateLocally(ts, symptom, shortTime);
+                    }
                     
-                    const rec = { ts: dateObj.getTime(), time: timeStr, fullDate, shortTime, flow, hour: dateObj.getHours(), points };
+                    const rec = { ts, time: timeStr, fullDate, shortTime, flow, hour: dateObj.getHours(), points, symptom };
                     if (!allData[dateKey]) allData[dateKey] = [];
                     allData[dateKey].push(rec);
                     flatRecords.push(rec);
@@ -1011,11 +1301,15 @@
                 if (measurements && measurements.length > 0) {
                     cell.classList.add('has-data');
                     let maxFlow = 0;
+                    let hasDyspnea = false;
                     for (let j = 0; j < measurements.length; j++) {
                         if (measurements[j].flow > maxFlow) maxFlow = measurements[j].flow;
+                        if (measurements[j].symptom === 'Отдышка') hasDyspnea = true;
                     }
+                    if (hasDyspnea) cell.classList.add('has-dyspnea');
                     const colorClass = maxFlow >= 320 ? 'val-green' : 'val-blue';
-                    cell.innerHTML = `<span class="day-num">${day}</span><span class="day-val ${colorClass}">${Math.round(maxFlow)}</span>`;
+                    const dotHtml = hasDyspnea ? '<span class="day-dyspnea-dot"></span>' : '';
+                    cell.innerHTML = `${dotHtml}<span class="day-num">${day}</span><span class="day-val ${colorClass}">${Math.round(maxFlow)}</span>`;
                 } else {
                     cell.innerHTML = `<span class="day-num">${day}</span>`;
                 }
@@ -1032,6 +1326,8 @@
             const labels = new Array(daysInMonth);
             const morningData = new Array(daysInMonth);
             const eveningData = new Array(daysInMonth);
+            const morningPointColors = new Array(daysInMonth);
+            const eveningPointColors = new Array(daysInMonth);
 
             for (let day = 1; day <= daysInMonth; day++) {
                 labels[day - 1] = day;
@@ -1039,16 +1335,26 @@
                 
                 if (measurements && measurements.length > 0) {
                     let maxM = -1, maxE = -1;
+                    let dispM = false, dispE = false;
                     for (let j = 0; j < measurements.length; j++) {
                         const m = measurements[j];
-                        if (m.hour < 12) { if (m.flow > maxM) maxM = m.flow; }
-                        else { if (m.flow > maxE) maxE = m.flow; }
+                        if (m.hour < 12) {
+                            if (m.flow > maxM) maxM = m.flow;
+                            if (m.symptom === 'Отдышка') dispM = true;
+                        } else {
+                            if (m.flow > maxE) maxE = m.flow;
+                            if (m.symptom === 'Отдышка') dispE = true;
+                        }
                     }
-                    morningData[day - 1] = maxM >= 0 ? maxM : null;
-                    eveningData[day - 1] = maxE >= 0 ? maxE : null;
+                    morningData[day - 1] = maxM >= 0 ? Math.min(maxM, 400) : null;
+                    eveningData[day - 1] = maxE >= 0 ? Math.min(maxE, 400) : null;
+                    morningPointColors[day - 1] = dispM ? '#FF453A' : '#30D158';
+                    eveningPointColors[day - 1] = dispE ? '#FF453A' : '#0A84FF';
                 } else {
                     morningData[day - 1] = null;
                     eveningData[day - 1] = null;
+                    morningPointColors[day - 1] = '#30D158';
+                    eveningPointColors[day - 1] = '#0A84FF';
                 }
             }
 
@@ -1063,10 +1369,13 @@
                             label: 'Утро',
                             data: morningData,
                             borderColor: '#30D158',
-                            backgroundColor: 'rgba(48, 209, 88, 0.14)',
+                            backgroundColor: 'rgba(48, 209, 88, 0.16)',
                             borderWidth: 3,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#30D158',
+                            pointRadius: 5.5,
+                            pointHoverRadius: 7.5,
+                            pointBorderWidth: 2.5,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: morningPointColors,
                             tension: 0.4,
                             spanGaps: true,
                             fill: false
@@ -1075,10 +1384,13 @@
                             label: 'День/Вечер',
                             data: eveningData,
                             borderColor: '#0A84FF',
-                            backgroundColor: 'rgba(10, 132, 255, 0.14)',
+                            backgroundColor: 'rgba(10, 132, 255, 0.16)',
                             borderWidth: 3,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#0A84FF',
+                            pointRadius: 5.5,
+                            pointHoverRadius: 7.5,
+                            pointBorderWidth: 2.5,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: eveningPointColors,
                             tension: 0.4,
                             spanGaps: true,
                             fill: false
@@ -1088,10 +1400,19 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     animation: { duration: 320, easing: 'easeOutQuart' },
-                    plugins: { legend: { display: true, labels: { color: 'rgba(235,235,245,0.75)' } } },
+                    plugins: { legend: { display: true, labels: { color: 'rgba(235,235,245,0.85)' } } },
                     scales: {
-                        x: { ticks: { color: 'rgba(235,235,245,0.58)', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 }, grid: { display: false } },
-                        y: { min: 0, max: 1000, ticks: { color: 'rgba(235,235,245,0.58)', stepSize: 50 }, grid: { color: 'rgba(255,255,255,0.07)' } }
+                        x: { ticks: { color: 'rgba(235,235,245,0.62)', stepSize: 1, autoSkip: false, maxRotation: 90, minRotation: 90 }, grid: { display: false } },
+                        y: {
+                            min: 0,
+                            max: 420,
+                            ticks: {
+                                color: 'rgba(235,235,245,0.62)',
+                                stepSize: 50,
+                                callback: (v) => (v <= 400 ? v : '')
+                            },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
+                        }
                     }
                 }
             });
@@ -1115,9 +1436,19 @@
             for (let i = 0; i < m.points.length; i++) if (m.points[i] > 0) activePointsCount++;
             const durationSec = (activePointsCount * getSampleStepSec(m.points.length)).toFixed(2);
 
+            let stateTagHtml = '';
+            if (m.symptom === 'Отдышка') {
+                stateTagHtml = `<span class="m-state-tag dyspnea">Отдышка</span>`;
+            } else if (m.symptom === 'Нормальное состояние') {
+                stateTagHtml = `<span class="m-state-tag normal">Нормальное состояние</span>`;
+            }
+
             item.innerHTML = `
                 <div class="m-top-row">
-                    <span class="m-time">🕒 ${labelText}</span>
+                    <div class="m-left-wrap">
+                        <span class="m-time">🕒 ${labelText}</span>
+                        ${stateTagHtml}
+                    </div>
                     <div class="m-right-wrap">
                         <span class="m-value" style="color:${z.color}">${Math.round(m.flow)} л/м</span>
                         <span class="m-chevron">▾</span>
@@ -1186,7 +1517,7 @@
             if (dayChartInstance) {
                 dayChartInstance.data.labels = slice.map(r => r.shortTime);
                 dayChartInstance.data.datasets[0].data = slice.map(r => r.flow);
-                dayChartInstance.data.datasets[0].pointBackgroundColor = slice.map(r => getZone(r.flow).color);
+                dayChartInstance.data.datasets[0].pointBackgroundColor = slice.map(r => r.symptom === 'Отдышка' ? '#FF453A' : getZone(r.flow).color);
                 dayChartInstance.update('none');
             }
         }
@@ -1198,6 +1529,19 @@
             intensityMainChartInstance = drawIntensityChart(canvas, rec.points, z.color, intensityMainChartInstance);
         }
 
+        function renderDayHistoryListOnly() {
+            const listEl = document.getElementById('dayHistoryList');
+            if (!listEl || !flatRecords.length) return;
+            cleanupInlineCharts('day_');
+            const frag = document.createDocumentFragment();
+            for (let idx = 0; idx < flatRecords.length; idx++) {
+                frag.appendChild(createExpandableMeasurementCard(flatRecords[idx], flatRecords[idx].fullDate, `day_${idx}`));
+            }
+            listEl.innerHTML = '';
+            listEl.appendChild(frag);
+            updateDayChartOnly();
+        }
+
         function renderDayView(withCounter = true) {
             const listEl = document.getElementById('dayHistoryList');
             document.getElementById('totalRecordsCount').innerText = flatRecords.length ? `${flatRecords.length} шт.` : '';
@@ -1207,6 +1551,7 @@
                 document.getElementById('lastFlow').innerText = '0';
                 document.getElementById('lastTime').innerText = 'Замеров в таблице пока нет';
                 document.getElementById('avgFlowNum').innerText = '0';
+                syncHeroAsthmaState(null);
                 listEl.innerHTML = `<div style="text-align:center; color:var(--text-secondary); padding:16px; font-size:14px;">Нет данных</div>`;
                 return;
             }
@@ -1232,6 +1577,7 @@
             }
 
             document.getElementById('lastTime').innerText = latest.fullDate;
+            syncHeroAsthmaState(latest);
 
             const badge = document.getElementById('zoneBadge');
             badge.innerText = zone.label;
@@ -1264,9 +1610,10 @@
                         borderColor: '#0A84FF',
                         backgroundColor: 'rgba(10, 132, 255, 0.2)',
                         borderWidth: 3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: slice.map(r => getZone(r.flow).color),
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBorderWidth: 2,
+                        pointBackgroundColor: slice.map(r => r.symptom === 'Отдышка' ? '#FF453A' : getZone(r.flow).color),
                         pointBorderColor: '#fff',
                         fill: true,
                         tension: 0.42
@@ -1427,4 +1774,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.2) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.7) =================== -->
