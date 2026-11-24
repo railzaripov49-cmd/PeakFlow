@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.7 - CLEAR GRAPH POINTS + GLOBAL ASTHMA STATE SYNC) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.8 - ONE-TAP DIRECT MORPH STATE TOGGLE) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -186,7 +186,6 @@
             border-color: rgba(255, 255, 255, 0.16);
         }
 
-        /* Индикатор дня с отдышкой на ячейке календаря */
         .day-cell.has-dyspnea {
             border-color: rgba(255, 69, 58, 0.45);
         }
@@ -406,109 +405,49 @@
             white-space: nowrap;
         }
 
+        /* ============================================================
+           ПЕРЕКЛЮЧАТЕЛЬ СОСТОЯНИЯ В ОДИН ТАП (LIQUID GLASS MORPH)
+           ============================================================ */
         .asthma-morph-pill {
             position: relative;
             height: 32px;
-            min-width: 96px;
             border-radius: 999px;
             background: 
-                radial-gradient(135% 100% at 28% 12%, rgba(255, 69, 58, 0.28) 0%, rgba(255, 159, 10, 0.08) 70%),
-                rgba(38, 24, 28, 0.78);
-            border: 1px solid rgba(255, 95, 85, 0.32);
-            box-shadow: 0 6px 16px rgba(255, 69, 58, 0.18), inset 0 1px 10px rgba(255, 255, 255, 0.16);
+                radial-gradient(135% 100% at 28% 12%, rgba(48, 209, 88, 0.28) 0%, rgba(48, 209, 88, 0.08) 70%),
+                rgba(22, 38, 28, 0.82);
+            border: 1px solid rgba(48, 209, 88, 0.42);
+            box-shadow: 0 6px 16px rgba(48, 209, 88, 0.18), inset 0 1px 10px rgba(255, 255, 255, 0.18);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            padding: 0 13px;
             cursor: pointer;
-            transition: width 0.42s var(--spring-gooey), height 0.42s var(--spring-gooey), border-radius 0.38s var(--spring), background 0.25s, border-color 0.25s, transform 0.28s var(--spring-gooey);
+            transition: background 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease, transform 0.38s var(--spring-gooey);
             will-change: transform;
         }
-        .asthma-morph-pill:not(.expanded):active {
-            transform: scale3d(0.88, 0.88, 1);
+        .asthma-morph-pill:active {
+            transform: scale3d(0.86, 0.86, 1);
         }
-        .asthma-morph-pill.logged {
+        .asthma-morph-pill.morph-bounce {
+            transform: scale3d(1.08, 1.08, 1);
+        }
+        .asthma-morph-pill.dyspnea {
             background: 
                 radial-gradient(135% 100% at 28% 12%, rgba(255, 69, 58, 0.44) 0%, rgba(255, 69, 58, 0.14) 70%),
                 rgba(52, 22, 26, 0.88);
             border-color: rgba(255, 105, 97, 0.55);
             box-shadow: 0 6px 20px rgba(255, 69, 58, 0.34), inset 0 1px 10px rgba(255, 255, 255, 0.22);
         }
-        .asthma-morph-pill.normal-state {
-            background: 
-                radial-gradient(135% 100% at 28% 12%, rgba(48, 209, 88, 0.28) 0%, rgba(48, 209, 88, 0.08) 70%),
-                rgba(22, 38, 28, 0.82);
-            border-color: rgba(48, 209, 88, 0.42);
-            box-shadow: 0 6px 16px rgba(48, 209, 88, 0.18), inset 0 1px 10px rgba(255, 255, 255, 0.18);
-        }
-        .asthma-morph-pill.expanded {
-            height: 36px;
-            border-radius: 18px;
-            background: 
-                radial-gradient(135% 100% at 28% 12%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 69, 58, 0.1) 70%),
-                rgba(26, 28, 36, 0.94);
-            border-color: rgba(255, 255, 255, 0.22);
-            cursor: default;
-        }
         .asthma-pill-label {
-            display: inline-flex;
-            align-items: center;
-            padding: 0 13px;
             font-size: 12px;
             font-weight: 600;
-            color: #FF6961;
-            white-space: nowrap;
-            transition: opacity 0.16s ease, transform 0.3s var(--spring);
-        }
-        .asthma-morph-pill.logged .asthma-pill-label {
-            color: #ffffff;
-        }
-        .asthma-morph-pill.normal-state .asthma-pill-label {
             color: var(--green);
-        }
-        .asthma-morph-pill.expanded .asthma-pill-label {
-            opacity: 0;
-            transform: scale3d(0.75, 0.75, 1);
-            pointer-events: none;
-            position: absolute;
-        }
-        .asthma-options {
-            display: none;
-            align-items: center;
-            gap: 4px;
-            padding: 3px;
-            opacity: 0;
-            transform: scale3d(0.86, 0.86, 1);
-            transition: opacity 0.18s ease, transform 0.32s var(--spring-gooey);
-        }
-        .asthma-morph-pill.expanded .asthma-options {
-            display: inline-flex;
-            opacity: 1;
-            transform: scale3d(1, 1, 1);
-        }
-        .asthma-opt-btn {
-            border: none;
-            background: rgba(255, 255, 255, 0.08);
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 5px 9px;
-            border-radius: 13px;
-            cursor: pointer;
             white-space: nowrap;
-            box-shadow: inset 0 1px 6px rgba(255,255,255,0.1);
-            transition: background 0.15s, transform 0.25s var(--spring-gooey);
+            pointer-events: none;
+            transition: color 0.28s ease;
         }
-        .asthma-opt-btn:active {
-            transform: scale3d(0.88, 0.88, 1);
-        }
-        .asthma-opt-btn.danger {
-            background: rgba(255, 69, 58, 0.26);
-            color: #FF8A80;
-        }
-        .asthma-opt-btn.normal {
-            background: rgba(48, 209, 88, 0.22);
-            color: #6EE787;
+        .asthma-morph-pill.dyspnea .asthma-pill-label {
+            color: #ffffff;
         }
 
         .stats-grid {
@@ -780,12 +719,9 @@
             </div>
             <div class="hero-footer-row">
                 <div id="lastTime" class="hero-meta">Загрузка точек с ESP32...</div>
-                <div id="asthmaMorphPill" class="asthma-morph-pill" onclick="toggleAsthmaPill(event)">
-                    <span id="asthmaPillLabel" class="asthma-pill-label">Отдышка</span>
-                    <div class="asthma-options">
-                        <button type="button" class="asthma-opt-btn danger" onclick="logAsthmaEvent('Отдышка', event)">Отдышка</button>
-                        <button type="button" class="asthma-opt-btn normal" onclick="logAsthmaEvent('Нормальное состояние', event)">Нормальное состояние</button>
-                    </div>
+                <!-- Прямой переключатель состояния в один тап -->
+                <div id="asthmaMorphPill" class="asthma-morph-pill" onclick="toggleAsthmaState(event)">
+                    <span id="asthmaPillLabel" class="asthma-pill-label">Нормальное состояние</span>
                 </div>
             </div>
         </div>
@@ -913,57 +849,54 @@
             } catch (err) {}
         }
 
-        function toggleAsthmaPill(e) {
-            e.stopPropagation();
-            const pill = document.getElementById('asthmaMorphPill');
-            if (!pill.classList.contains('expanded')) {
-                haptic('light');
-                pill.classList.add('expanded');
-            }
-        }
-
         function applyAsthmaStateVisual(symptom, exhaleTime) {
             const pill = document.getElementById('asthmaMorphPill');
             const label = document.getElementById('asthmaPillLabel');
             const card = document.getElementById('heroCard');
             if (!pill || !label || !card) return;
 
-            pill.classList.remove('expanded', 'logged', 'normal-state');
+            pill.classList.remove('dyspnea');
             card.classList.remove('state-dyspnea', 'state-normal');
 
-            if (!symptom) {
-                label.innerText = 'Отдышка';
-                return;
-            }
-
             const suffix = exhaleTime ? ` • ${exhaleTime}` : '';
-            if (symptom === 'Нормальное состояние') {
-                pill.classList.add('normal-state');
-                card.classList.add('state-normal');
-                label.innerText = `Нормальное состояние${suffix}`;
-            } else {
-                pill.classList.add('logged');
+            if (symptom === 'Отдышка') {
+                pill.classList.add('dyspnea');
                 card.classList.add('state-dyspnea');
                 label.innerText = `Отдышка${suffix}`;
+            } else {
+                card.classList.add('state-normal');
+                label.innerText = `Нормальное состояние${suffix}`;
             }
         }
 
-        function logAsthmaEvent(symptom, e) {
+        // Переключение состояния в один тап без выбора
+        function toggleAsthmaState(e) {
             if (e) e.stopPropagation();
             haptic('medium');
+
+            const pill = document.getElementById('asthmaMorphPill');
+            if (pill) {
+                pill.classList.remove('morph-bounce');
+                void pill.offsetWidth;
+                pill.classList.add('morph-bounce');
+                setTimeout(() => pill.classList.remove('morph-bounce'), 260);
+            }
+
             const latest = flatRecords.length ? flatRecords[0] : null;
+            const currentSymptom = latest ? latest.symptom : (pill.classList.contains('dyspnea') ? 'Отдышка' : 'Нормальное состояние');
+            const nextSymptom = currentSymptom === 'Отдышка' ? 'Нормальное состояние' : 'Отдышка';
+
             const exhaleTime = latest ? latest.shortTime : '';
             const currentPeak = latest ? Math.round(latest.flow) : 0;
             const recordKey = latest ? String(latest.ts) : 'latest';
 
             if (latest) {
-                latest.symptom = symptom;
+                latest.symptom = nextSymptom;
             }
 
-            applyAsthmaStateVisual(symptom, exhaleTime);
-            saveStateLocally(recordKey, symptom, exhaleTime);
+            applyAsthmaStateVisual(nextSymptom, exhaleTime);
+            saveStateLocally(recordKey, nextSymptom, exhaleTime);
 
-            // Обновляем отображение везде (список замеров, календарь, месячный график)
             renderCalendar();
             if (currentView === 'graph') renderMonthlyGraph();
             renderDayHistoryListOnly();
@@ -974,7 +907,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'asthma',
-                    symptom: symptom,
+                    symptom: nextSymptom,
                     flow: currentPeak,
                     time: exhaleTime
                 })
@@ -983,21 +916,15 @@
 
         function syncHeroAsthmaState(rec) {
             if (!rec) {
-                applyAsthmaStateVisual(null, '');
+                applyAsthmaStateVisual('Нормальное состояние', '');
                 return;
             }
-            if (rec.symptom) {
-                applyAsthmaStateVisual(rec.symptom, rec.shortTime);
-                return;
+            if (!rec.symptom) {
+                const map = getSavedStatesMap();
+                const saved = map[String(rec.ts)];
+                rec.symptom = (saved && saved.symptom) ? saved.symptom : 'Нормальное состояние';
             }
-            const map = getSavedStatesMap();
-            const saved = map[String(rec.ts)];
-            if (saved && saved.symptom) {
-                rec.symptom = saved.symptom;
-                applyAsthmaStateVisual(saved.symptom, rec.shortTime);
-            } else {
-                applyAsthmaStateVisual(null, '');
-            }
+            applyAsthmaStateVisual(rec.symptom, rec.shortTime);
         }
 
         function animateValue(el, target, duration = 420) {
@@ -1147,10 +1074,6 @@
             if (fab.classList.contains('expanded') && !fab.contains(event.target)) {
                 fab.classList.remove('expanded');
             }
-            const pill = document.getElementById('asthmaMorphPill');
-            if (pill && pill.classList.contains('expanded') && !pill.contains(event.target)) {
-                pill.classList.remove('expanded');
-            }
         }, { passive: true });
 
         function switchToView(target, e) {
@@ -1230,12 +1153,11 @@
                     const shortTime = `${hh}:${mm}`;
                     const fullDate = `${d}.${m} • ${shortTime}`;
 
-                    // Берём состояние из 4-го столбца Google Таблицы или из локального кэша
                     const sheetState = data[i][3] ? String(data[i][3]).trim() : '';
                     const localState = localMap[String(ts)]?.symptom || '';
-                    const symptom = sheetState || localState || '';
-                    if (symptom && !localState) {
-                        saveStateLocally(ts, symptom, shortTime);
+                    const symptom = sheetState || localState || 'Нормальное состояние';
+                    if (sheetState && !localState) {
+                        saveStateLocally(ts, sheetState, shortTime);
                     }
                     
                     const rec = { ts, time: timeStr, fullDate, shortTime, flow, hour: dateObj.getHours(), points, symptom };
@@ -1774,4 +1696,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.7) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.8) =================== -->
