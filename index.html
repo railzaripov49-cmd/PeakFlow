@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.9 - AUTO DYSPNEA < 350) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 16.0 - SLEEK SMALL DOTS LIKE INTENSITY CHART) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -1153,7 +1153,6 @@
                     const shortTime = `${hh}:${mm}`;
                     const fullDate = `${d}.${m} • ${shortTime}`;
 
-                    // Приоритет: 1) явный статус из 4-го столбца таблицы, 2) локальный кэш, 3) авто < 350 -> Отдышка
                     const sheetState = data[i][3] ? String(data[i][3]).trim() : '';
                     const localState = localMap[String(ts)]?.symptom || '';
                     const symptom = sheetState || localState || getAutoSymptom(flow);
@@ -1294,12 +1293,11 @@
                             data: morningData,
                             borderColor: '#30D158',
                             backgroundColor: 'rgba(48, 209, 88, 0.16)',
-                            borderWidth: 3,
-                            pointRadius: 5.5,
-                            pointHoverRadius: 7.5,
-                            pointBorderWidth: 2.5,
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderColor: morningPointColors,
+                            borderWidth: 2.5,
+                            pointRadius: 2.5,
+                            pointHoverRadius: 5,
+                            pointBorderWidth: 0,
+                            pointBackgroundColor: morningPointColors,
                             tension: 0.4,
                             spanGaps: true,
                             fill: false
@@ -1309,12 +1307,11 @@
                             data: eveningData,
                             borderColor: '#0A84FF',
                             backgroundColor: 'rgba(10, 132, 255, 0.16)',
-                            borderWidth: 3,
-                            pointRadius: 5.5,
-                            pointHoverRadius: 7.5,
-                            pointBorderWidth: 2.5,
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderColor: eveningPointColors,
+                            borderWidth: 2.5,
+                            pointRadius: 2.5,
+                            pointHoverRadius: 5,
+                            pointBorderWidth: 0,
+                            pointBackgroundColor: eveningPointColors,
                             tension: 0.4,
                             spanGaps: true,
                             fill: false
@@ -1533,12 +1530,11 @@
                         data: slice.map(r => r.flow),
                         borderColor: '#0A84FF',
                         backgroundColor: 'rgba(10, 132, 255, 0.2)',
-                        borderWidth: 3,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointBorderWidth: 2,
+                        borderWidth: 2.5,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 5,
+                        pointBorderWidth: 0,
                         pointBackgroundColor: slice.map(r => r.symptom === 'Отдышка' ? '#FF453A' : getZone(r.flow).color),
-                        pointBorderColor: '#fff',
                         fill: true,
                         tension: 0.42
                     }]
@@ -1698,4 +1694,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.9) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 16.0) =================== -->
