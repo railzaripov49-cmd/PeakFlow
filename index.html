@@ -1,4 +1,4 @@
-<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.8 - ONE-TAP DIRECT MORPH STATE TOGGLE) ================= -->
+<!-- ================= НАЧАЛО КОДА (ВЕРСИЯ 15.9 - AUTO DYSPNEA < 350) ================= -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -405,9 +405,6 @@
             white-space: nowrap;
         }
 
-        /* ============================================================
-           ПЕРЕКЛЮЧАТЕЛЬ СОСТОЯНИЯ В ОДИН ТАП (LIQUID GLASS MORPH)
-           ============================================================ */
         .asthma-morph-pill {
             position: relative;
             height: 32px;
@@ -719,7 +716,6 @@
             </div>
             <div class="hero-footer-row">
                 <div id="lastTime" class="hero-meta">Загрузка точек с ESP32...</div>
-                <!-- Прямой переключатель состояния в один тап -->
                 <div id="asthmaMorphPill" class="asthma-morph-pill" onclick="toggleAsthmaState(event)">
                     <span id="asthmaPillLabel" class="asthma-pill-label">Нормальное состояние</span>
                 </div>
@@ -807,6 +803,7 @@
 
         const scriptUrl = "https://script.google.com/macros/s/AKfycbxh0Poo3SwCP1-2wyQtV5BfGbxvOTKG012sbCPbNlRe-ay82MaTmHbT1ComA1CXT3Wv_Q/exec";
         const PERSONAL_BEST = 400;
+        const DYSPNEA_THRESHOLD = 350;
         const MONTH_NAMES = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
         const MONTH_NAMES_GEN = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
 
@@ -831,6 +828,10 @@
             if (!tg?.HapticFeedback) return;
             if (type === 'selection') tg.HapticFeedback.selectionChanged();
             else tg.HapticFeedback.impactOccurred(type);
+        }
+
+        function getAutoSymptom(flow) {
+            return Number(flow) < DYSPNEA_THRESHOLD ? 'Отдышка' : 'Нормальное состояние';
         }
 
         function getSavedStatesMap() {
@@ -869,7 +870,6 @@
             }
         }
 
-        // Переключение состояния в один тап без выбора
         function toggleAsthmaState(e) {
             if (e) e.stopPropagation();
             haptic('medium');
@@ -922,7 +922,7 @@
             if (!rec.symptom) {
                 const map = getSavedStatesMap();
                 const saved = map[String(rec.ts)];
-                rec.symptom = (saved && saved.symptom) ? saved.symptom : 'Нормальное состояние';
+                rec.symptom = (saved && saved.symptom) ? saved.symptom : getAutoSymptom(rec.flow);
             }
             applyAsthmaStateVisual(rec.symptom, rec.shortTime);
         }
@@ -1153,9 +1153,11 @@
                     const shortTime = `${hh}:${mm}`;
                     const fullDate = `${d}.${m} • ${shortTime}`;
 
+                    // Приоритет: 1) явный статус из 4-го столбца таблицы, 2) локальный кэш, 3) авто < 350 -> Отдышка
                     const sheetState = data[i][3] ? String(data[i][3]).trim() : '';
                     const localState = localMap[String(ts)]?.symptom || '';
-                    const symptom = sheetState || localState || 'Нормальное состояние';
+                    const symptom = sheetState || localState || getAutoSymptom(flow);
+
                     if (sheetState && !localState) {
                         saveStateLocally(ts, sheetState, shortTime);
                     }
@@ -1696,4 +1698,4 @@
     </script>
 </body>
 </html>
-<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.8) =================== -->
+<!-- ================= КОНЕЦ КОДА (ВЕРСИЯ 15.9) =================== -->
